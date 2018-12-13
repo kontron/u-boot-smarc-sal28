@@ -222,7 +222,7 @@ typedef struct ddr4_spd_eeprom_s generic_spd_eeprom_t;
 #define DDR_CDR_ODT_180ohm	0x2
 #define DDR_CDR_ODT_75ohm	0x3
 #define DDR_CDR_ODT_110ohm	0x4
-#define DDR_CDR_ODT_60hm	0x5
+#define DDR_CDR_ODT_60ohm	0x5
 #define DDR_CDR_ODT_70ohm	0x6
 #define DDR_CDR_ODT_47ohm	0x7
 #endif /* DDR3L */
