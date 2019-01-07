@@ -921,7 +921,7 @@ static int netc_mdio_probe(struct udevice *dev)
 		       priv->regs_size);
 
 	mdio_info.regs = (struct memac_mdio_controller *)(priv->regs_base + 0x1C00);
-	mdio_info.name = dev->name;
+	mdio_info.name = (char *)dev->name;
 	ENETC_DBG_UDEV(dev, "%s: EMDIO_CFG=0x%08x\n", __func__,
 		  enetc_read_port(priv, 0));
 
