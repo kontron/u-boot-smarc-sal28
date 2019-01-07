@@ -1,0 +1,25 @@
+Overview
+--------
+The Kontron SMARC SL28 board is TBD
+
+
+LS1028A SoC Overview
+--------------------------------------
+Please refer arch/arm/cpu/armv8/fsl-layerscape/doc/README.soc
+
+
+SL28 board Overview
+-------------------
+TBD
+
+FlexSPI flash memory map valid for both QDS and RDB
+TBD
+  Image                               Flash Offset
+ RCW+PBI                             0x00000000
+ Boot firmware (U-Boot)              0x00100000
+ Boot firmware Environment           0x00300000
+ PPA firmware                        0x00400000
+ DPAA2 MC                            0x00A00000
+ DPAA2 DPL                           0x00D00000
+ DPAA2 DPC                           0x00E00000
+ Kernel.itb                          0x01000000
