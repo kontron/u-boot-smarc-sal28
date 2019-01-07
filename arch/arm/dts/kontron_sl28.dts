@@ -1,0 +1,50 @@
+/*
+ * Kontron SMARC-sAL28 device tree source
+ *
+ * Copyright 2018 Kontron Europe GmbH
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+/dts-v1/;
+
+#include "fsl-ls1028a.dtsi"
+
+/ {
+	model = "Kontron SMARC-sAL28 Board";
+	compatible = "kontron,sl28", "fsl,ls1028a";
+	aliases {
+		spi0 = &fspi;
+	};
+};
+
+&fspi {
+	bus-num = <0>;
+	status = "okay";
+
+	qflash0: w25q32jw@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "spi-flash";
+		spi-max-frequency = <133000000>;
+		reg = <0>;
+	 };
+};
+
+&enetc_pcie {
+	ethernet@0 {
+		phy-mode = "rgmii";
+		//phy-handle = <&enetc_phy0>;
+	};
+	netc_mdio {
+		#address-cells=<0>;
+		#size-cells=<1>;
+		enetc_phy0: phy@0 {
+			reg = <2>;
+		};
+	};
+};
+
+&sata {
+	status = "okay";
+};

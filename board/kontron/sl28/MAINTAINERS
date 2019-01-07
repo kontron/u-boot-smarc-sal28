@@ -1,0 +1,7 @@
+Kontron SL28 BOARD
+M:	Thomas Schaefer <thomas.schaefer@kontron.com>
+M:	Michael Walle <michael.walle@kontron.com>
+S:	Maintained
+F:	board/kontron/sl28/
+F:	include/configs/kontron_sl28.h
+F:	configs/kontron_sl28_defconfig
