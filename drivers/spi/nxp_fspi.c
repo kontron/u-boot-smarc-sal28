@@ -190,10 +190,17 @@ static void fspi_set_lut(struct nxp_fspi_priv *priv)
 
 	/* Page Program */
 	lut_base = SEQID_PP * 4;
-	fspi_write32(priv->flags, &regs->lut[lut_base],
+	if (NXP_FSPI_FLASH_SIZE > SZ_16M) {
+		fspi_write32(priv->flags, &regs->lut[lut_base],
 		     OPRND0(FSPI_CMD_PP_4B) | PAD0(LUT_PAD1) |
 		     INSTR0(LUT_CMD) | OPRND1(ADDR32BIT) |
 		     PAD1(LUT_PAD1) | INSTR1(LUT_ADDR));
+	} else {
+		fspi_write32(priv->flags, &regs->lut[lut_base],
+		     OPRND0(FSPI_CMD_PP) | PAD0(LUT_PAD1) |
+		     INSTR0(LUT_CMD) | OPRND1(ADDR24BIT) |
+		     PAD1(LUT_PAD1) | INSTR1(LUT_ADDR));
+	}
 	fspi_write32(priv->flags, &regs->lut[lut_base + 1],
 		     OPRND0(0) |
 		     PAD0(LUT_PAD1) | INSTR0(LUT_WRITE));
@@ -202,11 +209,19 @@ static void fspi_set_lut(struct nxp_fspi_priv *priv)
 
 	/* Fast Read */
 	lut_base = SEQID_FAST_READ * 4;
-	fspi_write32(priv->flags, &regs->lut[lut_base],
+	if (NXP_FSPI_FLASH_SIZE > SZ_16M) {
+		fspi_write32(priv->flags, &regs->lut[lut_base],
 		     OPRND0(FSPI_CMD_FAST_READ_4B) |
 		     PAD0(LUT_PAD1) | INSTR0(LUT_CMD) |
 		     OPRND1(ADDR32BIT) | PAD1(LUT_PAD1) |
 		     INSTR1(LUT_ADDR));
+	} else {
+		fspi_write32(priv->flags, &regs->lut[lut_base],
+		     OPRND0(FSPI_CMD_FAST_READ) |
+		     PAD0(LUT_PAD1) | INSTR0(LUT_CMD) |
+		     OPRND1(ADDR24BIT) | PAD1(LUT_PAD1) |
+		     INSTR1(LUT_ADDR));
+	}
 	fspi_write32(priv->flags, &regs->lut[lut_base + 1],
 		     OPRND0(8) | PAD0(LUT_PAD1) | INSTR0(LUT_DUMMY) |
 		     OPRND1(0) | PAD1(LUT_PAD1) |
@@ -225,10 +240,17 @@ static void fspi_set_lut(struct nxp_fspi_priv *priv)
 
 	/* Erase a sector */
 	lut_base = SEQID_SE * 4;
-	fspi_write32(priv->flags, &regs->lut[lut_base],
+	if (NXP_FSPI_FLASH_SIZE > SZ_16M) {
+		fspi_write32(priv->flags, &regs->lut[lut_base],
 		     OPRND0(FSPI_CMD_SE_4B) | PAD0(LUT_PAD1) |
 		     INSTR0(LUT_CMD) | OPRND1(ADDR32BIT) |
 		     PAD1(LUT_PAD1) | INSTR1(LUT_ADDR));
+	} else {
+		fspi_write32(priv->flags, &regs->lut[lut_base],
+		     OPRND0(FSPI_CMD_SE) | PAD0(LUT_PAD1) |
+		     INSTR0(LUT_CMD) | OPRND1(ADDR32BIT) |
+		     PAD1(LUT_PAD1) | INSTR1(LUT_ADDR));
+	}
 	fspi_write32(priv->flags, &regs->lut[lut_base + 1], 0);
 	fspi_write32(priv->flags, &regs->lut[lut_base + 2], 0);
 	fspi_write32(priv->flags, &regs->lut[lut_base + 3], 0);
