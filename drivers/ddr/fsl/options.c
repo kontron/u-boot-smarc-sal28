@@ -743,7 +743,9 @@ unsigned int populate_memctl_options(const common_timing_params_t *common_dimm,
 			unsigned int ctrl_num)
 {
 	unsigned int i;
+#ifdef CONFIG_HWCONFIG
 	char buffer[HWCONFIG_BUFFER_SIZE];
+#endif
 	char *buf = NULL;
 #if defined(CONFIG_SYS_FSL_DDR3) || \
 	defined(CONFIG_SYS_FSL_DDR2) || \
@@ -754,12 +756,14 @@ unsigned int populate_memctl_options(const common_timing_params_t *common_dimm,
 	ulong ddr_freq;
 #endif
 
+#ifdef CONFIG_HWCONFIG
 	/*
 	 * Extract hwconfig from environment since we have not properly setup
 	 * the environment but need it for ddr config params
 	 */
 	if (env_get_f("hwconfig", buffer, sizeof(buffer)) > 0)
 		buf = buffer;
+#endif
 
 #if defined(CONFIG_SYS_FSL_DDR3) || \
 	defined(CONFIG_SYS_FSL_DDR2) || \
