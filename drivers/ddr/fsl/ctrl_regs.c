@@ -702,7 +702,7 @@ static void set_timing_cfg_2(const unsigned int ctrl_num,
 	 *             max(3nCK, 5ns) for DDR3-1600, 1866, 2133
 	 */
 	cke_pls = max(3U, picos_to_mclk(ctrl_num, mclk_ps > 1870 ? 7500 :
-					(mclk_ps > 1245 ? 5625 : 5000)));
+					(mclk_ps > 1250 ? 5625 : 5000)));
 #else
 	cke_pls = FSL_DDR_MIN_TCKE_PULSE_WIDTH_DDR;
 #endif
