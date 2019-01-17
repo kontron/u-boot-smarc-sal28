@@ -1,7 +1,7 @@
 /*
  * Copyright 2019 Kontron Europe GmbH
  *
- * SPDX-License-Identifier:	GPL-2.0+
+ * SPDX-License-Identifier:     GPL-2.0+
  */
 
 #ifndef __SL28_H
@@ -61,7 +61,7 @@
 #define CONFIG_SYS_NS16550_REG_SIZE     1
 #define CONFIG_SYS_NS16550_CLK          (get_bus_freq(0) / 2)
 
-#define CONFIG_SYS_MAXARGS		64	/* max command args */
+#define CONFIG_SYS_MAXARGS              64      /* max command args */
 
 #define CONFIG_BAUDRATE                 115200
 #define CONFIG_SYS_BAUDRATE_TABLE       { 9600, 19200, 38400, 57600, 115200 }
@@ -79,12 +79,33 @@
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LOAD_ADDR    (CONFIG_SYS_DDR_SDRAM_BASE + 0x10000000)
 
+/* Environment */
 /* Allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 
-#define CONFIG_EXTRA_ENV_SETTINGS               \
-	"hwconfig=fsl_ddr:bank_intlv=0\0"       \
-	"ethact=enetc#1\0"
+#define CONFIG_EXTRA_ENV_SETTINGS \
+        "hwconfig=fsl_ddr:bank_intlv=0\0" \
+        "fdt_addr=0x80ff0000\0" \
+        "loadaddr=0xa0000000\0" \
+        "kernel_addr=0x81000000\0" \
+        "ramdisk_addr=0x90000000\0" \
+        "fdt_high=0xffffffffffffffff\0" \
+        "initrd_high=0xffffffffffffffff\0" \
+        "bootcmd=run bootcmd_${bootsource}\0" \
+        "bootsource=mmc\0" \
+        "bootcmd_mmc=load mmc 0:1 $kernel_addr /kernel " \
+               "&& load mmc 0:1 $fdt_addr /dtb " \
+               "&& load mmc 0:1 $ramdisk_addr /rootfs " \
+               "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
+        "bootcmd_daily=dhcp && tftp $kernel_addr 10.0.1.36:b/sl28/kernel${release} " \
+               "&& tftp $fdt_addr 10.0.1.36:b/sl28/dtb${release} " \
+               "&& tftp $ramdisk_addr 10.0.1.36:b/sl28/dtb${release} " \
+               "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
+        "update_rcw=dhcp && tftp 10.0.1.36:b/sl28/rcw " \
+                "&& sf probe 0 && sf update $fileaddr 0 $filesize\0" \
+        "update_uboot=dhcp && tftp 10.0.1.36:b/sl28/uboot " \
+                "&& sf probe 0 && sf update $fileaddr 0x10000 $filesize\0" \
+        "ethact=enetc#1\0"
 
 /* Monitor Command Prompt */
 #define CONFIG_SYS_CBSIZE               512     /* Console I/O Buffer Size */
@@ -136,13 +157,13 @@
 #define CONFIG_SYS_DDR_RAW_TIMING
 #define CONFIG_DDR_ECC
 #define CONFIG_ECC_INIT_VIA_DDRCONTROLLER
-#define CONFIG_MEM_INIT_VALUE		0xdeadbeef
+#define CONFIG_MEM_INIT_VALUE           0xdeadbeef
 
 #define CONFIG_VERY_BIG_RAM
 #define CONFIG_CHIP_SELECTS_PER_CTRL    2
 #define CONFIG_NR_DRAM_BANKS            2
 #define CONFIG_DIMM_SLOTS_PER_CTLR      1
-#define CONFIG_SYS_SDRAM_SIZE		0x80000000
+#define CONFIG_SYS_SDRAM_SIZE           0x80000000
 #define CONFIG_SYS_DDR_SDRAM_BASE       0x80000000UL
 #define CONFIG_SYS_FSL_DDR_SDRAM_BASE_PHY       0
 #define CONFIG_SYS_SDRAM_BASE           CONFIG_SYS_DDR_SDRAM_BASE
@@ -151,8 +172,8 @@
 
 /* FlexSPI */
 #ifdef CONFIG_NXP_FSPI
-#define NXP_FSPI_FLASH_SIZE		SZ_4M
-#define NXP_FSPI_FLASH_NUM		1
+#define NXP_FSPI_FLASH_SIZE             SZ_4M
+#define NXP_FSPI_FLASH_NUM              1
 #endif
 
 /* Store environment at top of flash */
@@ -165,7 +186,7 @@
 
 /* XXX remove me, but once removed u-boot runs into an exception */
 #define CONFIG_HWCONFIG
-#define HWCONFIG_BUFFER_SIZE		128
+#define HWCONFIG_BUFFER_SIZE            128
 
 #ifdef CONFIG_SPL_BUILD
 #define CONFIG_SYS_MONITOR_BASE CONFIG_SPL_TEXT_BASE
