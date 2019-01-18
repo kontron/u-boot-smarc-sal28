@@ -167,11 +167,12 @@ int fsl_ddr_get_dimm_params(dimm_params_t *pdimm,
 	return 0;
 }
 #else
-
+/* fixed sdram settings for SL28 */
 static phys_size_t fixed_sdram(void)
 {
 	size_t ddr_size;
 
+#if defined(CONFIG_SPL_BUILD) || !defined(CONFIG_SPL)
 	fsl_ddr_cfg_regs_t ddr_cfg_regs = {
 		.cs[0].bnds		= 0x0000007f,
 		.cs[0].config		= 0x80044402,
@@ -226,6 +227,7 @@ static phys_size_t fixed_sdram(void)
 
 
 	fsl_ddr_set_memctl_regs(&ddr_cfg_regs, 0, 0);
+#endif
 	ddr_size = 4ULL << 30;
 
 	return ddr_size;
@@ -234,12 +236,16 @@ static phys_size_t fixed_sdram(void)
 
 int fsl_initdram(void)
 {
+#if defined(CONFIG_SPL) && !defined(CONFIG_SPL_BUILD)
+	gd->ram_size = 4ULL << 30;
+#else
 #ifdef CONFIG_SYS_DDR_RAW_TIMING
 	puts("Initializing DDR....using raw memory timing\n");
 	gd->ram_size =  fsl_ddr_sdram();
 #else
 	puts("Initializeing DDR....using fixed timing\n");
 	gd->ram_size = fixed_sdram();
+#endif
 #endif
 
 	return 0;

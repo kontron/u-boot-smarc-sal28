@@ -211,6 +211,7 @@ static void setup_sgmii(void)
 
 int last_stage_init(void)
 {
+	puts("Configuring RGMII and SGMII\n");
 	setup_rgmii();
 	setup_sgmii();
 
