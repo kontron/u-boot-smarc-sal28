@@ -18,8 +18,6 @@
 #define SPL_NO_SATA
 #define SPL_NO_QE
 #define SPL_NO_EEPROM
-#endif
-#if (defined(CONFIG_SPL_BUILD) && defined(CONFIG_SD_BOOT_QSPI))
 #define SPL_NO_IFC
 #endif
 
@@ -61,8 +59,6 @@
 #define CONFIG_SYS_NS16550_REG_SIZE     1
 #define CONFIG_SYS_NS16550_CLK          (get_bus_freq(0) / 2)
 
-#define CONFIG_SYS_MAXARGS              64      /* max command args */
-
 #define CONFIG_BAUDRATE                 115200
 #define CONFIG_SYS_BAUDRATE_TABLE       { 9600, 19200, 38400, 57600, 115200 }
 
@@ -80,6 +76,7 @@
 #define CONFIG_SYS_LOAD_ADDR    (CONFIG_SYS_DDR_SDRAM_BASE + 0x10000000)
 
 /* Environment */
+#ifndef SPL_NO_ENV
 /* Allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 
@@ -106,6 +103,7 @@
         "update_uboot=dhcp && tftp 10.0.1.36:b/sl28/uboot " \
                 "&& sf probe 0 && sf update $fileaddr 0x10000 $filesize\0" \
         "ethact=enetc#1\0"
+#endif
 
 /* Monitor Command Prompt */
 #define CONFIG_SYS_CBSIZE               512     /* Console I/O Buffer Size */
@@ -118,6 +116,10 @@
 #define CONFIG_CMDLINE_EDITING          1
 #endif
 #endif
+
+#define CONFIG_SYS_MAXARGS              64      /* max command args */
+
+#define CONFIG_SYS_BOOTM_LEN   (64 << 20)      /* Increase max gunzip size */
 
 /*  MMC  */
 #ifndef SPL_NO_MMC
@@ -143,18 +145,12 @@
 #define CONFIG_SYS_MONITOR_LEN         (512 * 1024)
 #endif
 
-#ifdef CONFIG_SPL_BUILD
-#define CONFIG_SYS_MONITOR_BASE CONFIG_SPL_TEXT_BASE
-#else
-#define CONFIG_SYS_MONITOR_BASE CONFIG_SYS_TEXT_BASE
-#endif
 
 #define CONFIG_SYS_CLK_FREQ             100000000 /* 100 MHz base clock */
 #define CONFIG_DDR_CLK_FREQ             100000000 /* 100 MHz base clock */
 #define COUNTER_FREQUENCY_REAL          (CONFIG_SYS_CLK_FREQ/4)
 
 /* DDR */
-#define CONFIG_SYS_DDR_RAW_TIMING
 #define CONFIG_DDR_ECC
 #define CONFIG_ECC_INIT_VIA_DDRCONTROLLER
 #define CONFIG_MEM_INIT_VALUE           0xdeadbeef
@@ -208,6 +204,11 @@
 #define CONFIG_SCSI_DEV_LIST {SCSI_VEND_ID, SCSI_DEV_ID}
 #define CONFIG_SCSI_AHCI_PLAT
 #define CONFIG_SYS_SATA1                        AHCI_BASE_ADDR1
+#endif
+
+#if defined(CONFIG_SD_BOOT)
+#define CONFIG_TZPC_OCRAM_BSS_HEAP_NS
+#define OCRAM_NONSECURE_SIZE            0x00010000
 #endif
 
 #endif /* __SL28_H */
