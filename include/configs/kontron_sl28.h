@@ -7,20 +7,6 @@
 #ifndef __SL28_H
 #define __SL28_H
 
-/* SPL build */
-#ifdef CONFIG_SPL_BUILD
-#define SPL_NO_FMAN
-#define SPL_NO_DSPI
-#define SPL_NO_PCIE
-#define SPL_NO_ENV
-#define SPL_NO_MISC
-#define SPL_NO_USB
-#define SPL_NO_SATA
-#define SPL_NO_QE
-#define SPL_NO_EEPROM
-#define SPL_NO_IFC
-#endif
-
 #define CONFIG_REMAKE_ELF
 #define CONFIG_FSL_LAYERSCAPE
 #define CONFIG_MP
@@ -76,7 +62,6 @@
 #define CONFIG_SYS_LOAD_ADDR    (CONFIG_SYS_DDR_SDRAM_BASE + 0x10000000)
 
 /* Environment */
-#ifndef SPL_NO_ENV
 /* Allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 
@@ -103,7 +88,6 @@
         "update_uboot=dhcp && tftp 10.0.1.36:b/sl28/uboot " \
                 "&& sf probe 0 && sf update $fileaddr 0x10000 $filesize\0" \
         "ethact=enetc#1\0"
-#endif
 
 /* Monitor Command Prompt */
 #define CONFIG_SYS_CBSIZE               512     /* Console I/O Buffer Size */
@@ -111,22 +95,14 @@
                                         sizeof(CONFIG_SYS_PROMPT) + 16)
 #define CONFIG_SYS_BARGSIZE             CONFIG_SYS_CBSIZE /* Boot args buffer */
 
-#ifndef SPL_NO_MISC
-#ifndef CONFIG_CMDLINE_EDITING
-#define CONFIG_CMDLINE_EDITING          1
-#endif
-#endif
-
 #define CONFIG_SYS_MAXARGS              64      /* max command args */
 
 #define CONFIG_SYS_BOOTM_LEN   (64 << 20)      /* Increase max gunzip size */
 
 /*  MMC  */
-#ifndef SPL_NO_MMC
 #ifdef CONFIG_MMC
 #define CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_MMC_HAS_CAPBLT_VS33
-#endif
 #endif
 
 #ifdef CONFIG_SPL
@@ -137,8 +113,6 @@
 #define CONFIG_SPL_STACK               (CONFIG_SYS_FSL_OCRAM_BASE + 0x9ff0)
 #define CONFIG_SPL_TARGET              "u-boot-with-spl.bin"
 #define CONFIG_SPL_TEXT_BASE           0x18010000
-
-#define CONFIG_SPL_I2C_SUPPORT
 
 #define CONFIG_SYS_SPL_MALLOC_SIZE     0x00100000
 #define CONFIG_SYS_SPL_MALLOC_START    0x80200000
@@ -191,10 +165,6 @@
 #endif
 
 /* SATA */
-#ifndef SPL_NO_SATA
-#ifndef CONFIG_CMD_EXT2
-#define CONFIG_CMD_EXT2
-#endif
 #define CONFIG_SYS_SCSI_MAX_SCSI_ID             1
 #define CONFIG_SYS_SCSI_MAX_LUN                 1
 #define CONFIG_SYS_SCSI_MAX_DEVICE              (CONFIG_SYS_SCSI_MAX_SCSI_ID * \
@@ -204,7 +174,6 @@
 #define CONFIG_SCSI_DEV_LIST {SCSI_VEND_ID, SCSI_DEV_ID}
 #define CONFIG_SCSI_AHCI_PLAT
 #define CONFIG_SYS_SATA1                        AHCI_BASE_ADDR1
-#endif
 
 #if defined(CONFIG_SD_BOOT)
 #define CONFIG_TZPC_OCRAM_BSS_HEAP_NS
