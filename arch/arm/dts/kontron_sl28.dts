@@ -33,14 +33,21 @@
 
 &enetc_pcie {
 	ethernet@0 {
+		phy-mode = "sgmii";
+		phy-handle = <&enetc_phy1>;
+	};
+	ethernet@1 {
 		phy-mode = "rgmii";
-		//phy-handle = <&enetc_phy0>;
+		phy-handle = <&enetc_phy0>;
 	};
 	netc_mdio {
 		#address-cells=<0>;
 		#size-cells=<1>;
-		enetc_phy0: phy@0 {
-			reg = <2>;
+		enetc_phy0: phy@4 {
+			reg = <4>;
+		};
+		enetc_phy1: phy@5 {
+			reg = <5>;
 		};
 	};
 };
