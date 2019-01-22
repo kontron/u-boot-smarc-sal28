@@ -108,7 +108,7 @@ void setup_rgmii(void)
 	#define NETC_PF1_ECAM_BASE	0x1F0001000
 	struct mii_dev *ext_bus;
 	char *mdio_name = "netc_mdio";
-	int phy_addr = 0;
+	int phy_addr = 4;
 	int value;
 
 	PCS_INF("trying to set up RGMII\n");
