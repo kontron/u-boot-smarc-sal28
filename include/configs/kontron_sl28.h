@@ -85,7 +85,7 @@
                "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
         "update_rcw=dhcp && tftp 10.0.1.36:b/sl28/rcw " \
                 "&& sf probe 0 && sf update $fileaddr 0 $filesize\0" \
-        "update_uboot=dhcp && tftp 10.0.1.36:b/sl28/uboot " \
+        "update_uboot=dhcp && tftp 10.0.1.36:b/sl28/u-boot " \
                 "&& sf probe 0 && sf update $fileaddr 0x10000 $filesize\0" \
         "ethact=enetc#1\0"
 
