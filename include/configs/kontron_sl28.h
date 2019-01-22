@@ -67,6 +67,7 @@
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
         "hwconfig=fsl_ddr:bank_intlv=0\0" \
+        "autoload=no\0" \
         "fdt_addr=0x80ff0000\0" \
         "loadaddr=0xa0000000\0" \
         "kernel_addr=0x81000000\0" \
