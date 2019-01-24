@@ -75,7 +75,7 @@
         "fdt_high=0xffffffffffffffff\0" \
         "initrd_high=0xffffffffffffffff\0" \
         "bootcmd=run bootcmd_${bootsource}\0" \
-        "bootargs=default_hugepagesz=2m hugepagesz=2m hugepages=256 video=1920x1080-32@60 cma=256M\0"
+        "bootargs=default_hugepagesz=2m hugepagesz=2m hugepages=256 video=1920x1080-32@60 cma=256M\0" \
         "bootsource=mmc\0" \
         "bootcmd_mmc=load mmc 0:1 $kernel_addr /kernel " \
                 "&& load mmc 0:1 $fdt_addr /dtb " \
