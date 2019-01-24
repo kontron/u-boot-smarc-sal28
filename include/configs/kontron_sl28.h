@@ -75,15 +75,18 @@
         "fdt_high=0xffffffffffffffff\0" \
         "initrd_high=0xffffffffffffffff\0" \
         "bootcmd=run bootcmd_${bootsource}\0" \
+        "bootargs=default_hugepagesz=2m hugepagesz=2m hugepages=256 video=1920x1080-32@60 cma=256M\0"
         "bootsource=mmc\0" \
         "bootcmd_mmc=load mmc 0:1 $kernel_addr /kernel " \
-               "&& load mmc 0:1 $fdt_addr /dtb " \
-               "&& load mmc 0:1 $ramdisk_addr /rootfs " \
-               "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
-        "bootcmd_daily=dhcp && tftp $kernel_addr 10.0.1.36:b/sl28/kernel${release} " \
-               "&& tftp $fdt_addr 10.0.1.36:b/sl28/dtb${release} " \
-               "&& tftp $ramdisk_addr 10.0.1.36:b/sl28/rootfs${release} " \
-               "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
+                "&& load mmc 0:1 $fdt_addr /dtb " \
+                "&& load mmc 0:1 $ramdisk_addr /rootfs " \
+                "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
+        "bootcmd_daily=dhcp && tftp $loadaddr 10.0.1.36:b/sl28/dp-firmware${release} " \
+                "&& hdp load $loadaddr 2000 " \
+                "&& tftp $kernel_addr 10.0.1.36:b/sl28/kernel${release} " \
+                "&& tftp $fdt_addr 10.0.1.36:b/sl28/dtb${release} " \
+                "&& tftp $ramdisk_addr 10.0.1.36:b/sl28/rootfs${release} " \
+                "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
         "update_rcw=dhcp && tftp 10.0.1.36:b/sl28/rcw " \
                 "&& sf probe 0 && sf update $fileaddr 0 $filesize\0" \
         "update_uboot=dhcp && tftp 10.0.1.36:b/sl28/u-boot " \
