@@ -1056,22 +1056,22 @@ static inline int check_psci(void)
 
 static void config_core_prefetch(void)
 {
-	char *buf = NULL;
 #ifdef CONFIG_HWCONFIG
+	char *buf = NULL;
 	char buffer[HWCONFIG_BUFFER_SIZE];
+	size_t arglen;
 #endif
 	const char *prefetch_arg = NULL;
-	size_t arglen;
 	unsigned int mask;
 	struct pt_regs regs;
 
 #ifdef CONFIG_HWCONFIG
 	if (env_get_f("hwconfig", buffer, sizeof(buffer)) > 0)
 		buf = buffer;
-#endif
 
 	prefetch_arg = hwconfig_subarg_f("core_prefetch", "disable",
 					 &arglen, buf);
+#endif
 
 	if (prefetch_arg) {
 		mask = simple_strtoul(prefetch_arg, NULL, 0) & 0xff;
