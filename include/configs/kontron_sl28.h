@@ -66,7 +66,6 @@
 #define CONFIG_ENV_OVERWRITE
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-        "hwconfig=fsl_ddr:bank_intlv=0\0" \
         "autoload=no\0" \
         "fdt_addr=0x80ff0000\0" \
         "loadaddr=0xa0000000\0" \
@@ -157,10 +156,6 @@
 #define CONFIG_ENV_SECT_SIZE            0x10000
 #define CONFIG_ENV_ADDR                 (CONFIG_SYS_FLASH_BASE + \
                                          CONFIG_ENV_OFFSET)
-
-/* XXX remove me, but once removed u-boot runs into an exception */
-#define CONFIG_HWCONFIG
-#define HWCONFIG_BUFFER_SIZE            128
 
 #ifdef CONFIG_SPL_BUILD
 #define CONFIG_SYS_MONITOR_BASE CONFIG_SPL_TEXT_BASE
