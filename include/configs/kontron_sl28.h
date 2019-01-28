@@ -81,7 +81,7 @@
                 "&& load mmc 0:1 $ramdisk_addr /rootfs " \
                 "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
         "bootcmd_daily=dhcp && tftp $loadaddr 10.0.1.36:b/sl28/dp-firmware${release} " \
-                "&& hdp load $loadaddr 2000 " \
+                "&& hdp load $loadaddr 0x2000 " \
                 "&& tftp $kernel_addr 10.0.1.36:b/sl28/kernel${release} " \
                 "&& tftp $fdt_addr 10.0.1.36:b/sl28/dtb${release} " \
                 "&& tftp $ramdisk_addr 10.0.1.36:b/sl28/rootfs${release} " \
@@ -90,6 +90,8 @@
                 "&& sf probe 0 && sf update $fileaddr 0 $filesize\0" \
         "update_uboot=dhcp && tftp 10.0.1.36:b/sl28/u-boot " \
                 "&& sf probe 0 && sf update $fileaddr 0x10000 $filesize\0" \
+        "update_dp_firmware=dhcp && tftp 10.0.1.36:b/sl28/dp-firmware " \
+                "&& sf probe 0 && sf update $fileaddr 0x100000 $filesize\0" \
         "ethact=enetc#1\0"
 
 /* Monitor Command Prompt */
