@@ -248,7 +248,7 @@ static void fspi_set_lut(struct nxp_fspi_priv *priv)
 	} else {
 		fspi_write32(priv->flags, &regs->lut[lut_base],
 		     OPRND0(FSPI_CMD_SE) | PAD0(LUT_PAD1) |
-		     INSTR0(LUT_CMD) | OPRND1(ADDR32BIT) |
+		     INSTR0(LUT_CMD) | OPRND1(ADDR24BIT) |
 		     PAD1(LUT_PAD1) | INSTR1(LUT_ADDR));
 	}
 	fspi_write32(priv->flags, &regs->lut[lut_base + 1], 0);
