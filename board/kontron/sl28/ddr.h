@@ -7,6 +7,9 @@
 #ifndef __DDR_H__
 #define __DDR_H__
 
+#define DDR_CDR2_VREF_OVRD_EN   0x8000
+#define DDR_CDR2_VREF_OVRD_100  0x3C00
+
 struct board_specific_parameters {
 	u32 n_ranks;
 	u32 datarate_mhz_high;
@@ -33,10 +36,10 @@ static const struct board_specific_parameters udimm0[] = {
 	 */
 #ifdef CONFIG_SYS_FSL_DDR3
 	{      1, 1350,    0,    8,      8, 0x0708080a, 0x0a0b0c09, 0x1f,     8, 0},
-	{      1, 1666,    2,    8,      8, 0x0708080a, 0x0a0b0c09, 0x1f,     8, 0},
+	{      1, 1666,    2,   10,      7, 0x060a0900, 0x0000000b, 0x1f,     8, 0},
 	{      2, 1350,    0,    8,      8, 0x0708080a, 0x0a0b0c09, 0x1f,     8, 0},
-	{      2, 1666,    2,    8,      8, 0x0708080a, 0x0a0b0c09, 0x1f,     8, 0},
-	{      2, 1666,    0,    8,      8, 0x0708080a, 0x0a0b0c09, 0x1f,     8, 0},
+	{      2, 1666,    2,   10,      7, 0x060a0900, 0x0000000b, 0x1f,     8, 0},
+	{      2, 1666,    0,   10,      7, 0x060a0900, 0x0000000b, 0x1f,     8, 0},
 #else
 #error DDR type not defined
 #endif
