@@ -85,7 +85,7 @@ found:
 	 * Factors to consider for half-strength driver enable:
 	 *	- number of DIMMs installed
 	 */
-	popts->half_strength_driver_enable = 0;
+	popts->half_strength_driver_enable = 1;
 
 	/*
 	 * Write leveling override
@@ -115,7 +115,9 @@ found:
 
 	/* DHC_EN = 1, ODT = 75 Ohm */
 	popts->ddr_cdr1 = DDR_CDR1_DHC_EN | DDR_CDR1_ODT(DDR_CDR_ODT_75ohm);
-	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_75ohm);
+        /* VREF_OVRD_EN = 1, VREF_OVRD_VALUE = 100% due to DDRV tool settings */
+	popts->ddr_cdr2 = DDR_CDR2_VREF_OVRD_EN | DDR_CDR2_VREF_OVRD_100 |
+                           DDR_CDR2_ODT(DDR_CDR_ODT_75ohm);
 }
 
 dimm_params_t ddr_raw_timing = {
