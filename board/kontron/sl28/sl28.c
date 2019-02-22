@@ -182,7 +182,6 @@ static void setup_sgmii(void)
 	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x13, 0x0003);
 	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x12, 0x06a0);
 
-#if 0
 	/* restart AN */
 	value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
 
@@ -196,7 +195,6 @@ static void setup_sgmii(void)
 	} while (--to);
 	if ((value & 0x0024) != 0x0024)
 		printf("PCS[0] didn't link up, giving up. (%04x)\n", value);
-#endif
 }
 
 #define DCFG_RCWSR27 0x168
