@@ -91,8 +91,7 @@
         "update_uboot=dhcp && tftp 10.0.1.36:b/sl28/u-boot " \
                 "&& sf probe 0 && sf update $fileaddr 0x10000 $filesize\0" \
         "update_dp_firmware=dhcp && tftp 10.0.1.36:b/sl28/dp-firmware " \
-                "&& sf probe 0 && sf update $fileaddr 0x100000 $filesize\0" \
-        "ethact=enetc#1\0"
+                "&& sf probe 0 && sf update $fileaddr 0x100000 $filesize\0"
 
 /* Monitor Command Prompt */
 #define CONFIG_SYS_CBSIZE               512     /* Console I/O Buffer Size */
