@@ -99,9 +99,6 @@ int ft_board_setup(void *blob, bd_t *bd)
 }
 #endif
 
-#define PCS_INF(fmt, args...)  do {} while (0)
-#define PCS_ERR(fmt, args...)  printf("PCS: " fmt, ##args)
-
 void setup_rgmii(void)
 {
 	#define NETC_PF1_BAR0_BASE	0x1f8050000
@@ -111,8 +108,6 @@ void setup_rgmii(void)
 	int phy_addr = 4;
 	int value;
 
-	PCS_INF("trying to set up RGMII\n");
-
 	/* turn on PCI function */
 	out_le16(NETC_PF1_ECAM_BASE + 4, 0xffff);
 	out_le32(NETC_PF1_BAR0_BASE + 0x8300, 0x8006);
@@ -120,7 +115,7 @@ void setup_rgmii(void)
 	/* configure AQR PHY */
 	ext_bus = miiphy_get_dev_by_name(mdio_name);
 	if (!ext_bus) {
-		PCS_ERR("couldn't find MDIO bus, ignoring the PHY\n");
+		printf("couldn't find MDIO bus, ignoring the PHY\n");
 		return;
 	}
 	/* Atheros magic */
@@ -156,7 +151,7 @@ void setup_rgmii(void)
 
 	return;
 phy_err:
-	PCS_ERR("RGMII PHY access error, giving up.\n");
+	printf("RGMII PHY access error, giving up.\n");
 }
 
 extern int serdes_protocol;
@@ -171,17 +166,11 @@ static void setup_sgmii(void)
 	u16 value;
 	int to;
 
-	if ((serdes_protocol & 0xf0) != 0x0080)
-		return;
-
-	PCS_INF("trying to set up SGMII, this is hardcoded for SERDES x8xx!!!!\n");
-
 	//out_le32(NETC_PCS_SGMIICR1(0), 0x00000000);
 	// writing this kills the link for some reason
 
 	/* turn on PCI function */
 	out_le16(NETC_PF0_ECAM_BASE + 4, 0xffff);
-
 
 	bus.priv = (void *)NETC_PF0_BAR0_BASE + 0x8030;
 	value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
@@ -193,6 +182,7 @@ static void setup_sgmii(void)
 	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x13, 0x0003);
 	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x12, 0x06a0);
 
+#if 0
 	/* restart AN */
 	value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
 
@@ -204,16 +194,22 @@ static void setup_sgmii(void)
 		if ((value & 0x0024) == 0x0024)
 			break;
 	} while (--to);
-	PCS_INF("BMSR %04x\n", value);
 	if ((value & 0x0024) != 0x0024)
-		PCS_ERR("PCS[0] didn't link up, giving up.\n");
+		printf("PCS[0] didn't link up, giving up. (%04x)\n", value);
+#endif
 }
 
+#define DCFG_RCWSR27 0x168
 int last_stage_init(void)
 {
-	puts("Configuring RGMII and SGMII\n");
-	setup_rgmii();
-	setup_sgmii();
+	u32 rcwsr27 = in_le32(DCFG_BASE + DCFG_RCWSR27);
+
+	if ((rcwsr27 & 0x3000007e) == 0)
+		setup_rgmii();
+
+	if (   ((serdes_protocol & 0x00f0) == 0x0080)
+	    || ((serdes_protocol & 0x000f) == 0x0008))
+		setup_sgmii();
 
 	return 0;
 }
