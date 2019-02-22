@@ -13,6 +13,16 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#define GPPORCR1_MEM_MASK           (0xf << 4)
+#define GPPORCR1_MEM_512MB_CS0      (0 << 4)
+#define GPPORCR1_MEM_1GB_CS0        (1 << 4)
+#define GPPORCR1_MEM_2GB_CS0        (2 << 4)
+#define GPPORCR1_MEM_4GB_CS0_1      (3 << 4)
+#define GPPORCR1_MEM_4GB_CS0_2      (4 << 4)
+#define GPPORCR1_MEM_8GB_CS0_1_2_3  (5 << 4)
+
+#define DCFG_GPPORCR1 0x20
+
 #ifdef CONFIG_SYS_DDR_RAW_TIMING
 void fsl_ddr_board_options(memctl_options_t *popts,
 			   dimm_params_t *pdimm,
@@ -168,19 +178,19 @@ int fsl_ddr_get_dimm_params(dimm_params_t *pdimm,
 
 	return 0;
 }
-#else
-/* fixed sdram settings for SL28 */
-static phys_size_t fixed_sdram(void)
-{
-	size_t ddr_size;
+#endif
 
-#if defined(CONFIG_SPL_BUILD) || !defined(CONFIG_SPL)
+int fsl_initdram(void)
+{
+	u32 gpporcr1 = in_le32(DCFG_BASE + DCFG_GPPORCR1);
+
+	/* fixed sdram settings for SL28 */
 	fsl_ddr_cfg_regs_t ddr_cfg_regs = {
 		.cs[0].bnds		= 0x0000007f,
 		.cs[0].config		= 0x80044402,
 		.cs[0].config_2		= 0,
 		.cs[1].bnds		= 0x008000ff,
-		.cs[1].config		= 0x80004402,
+		.cs[1].config		= 0x80044402,
 		.cs[1].config_2		= 0,
 
 		.timing_cfg_3		= 0x010e1000,
@@ -227,26 +237,41 @@ static phys_size_t fixed_sdram(void)
 		.ddr_cdr2		= 0x00000001,
 	};
 
+	switch (gpporcr1 & GPPORCR1_MEM_MASK)
+	{
+	case GPPORCR1_MEM_2GB_CS0:
+		gd->ram_size = 0x80000000;
+		ddr_cfg_regs.cs[1].bnds = 0;
+		ddr_cfg_regs.cs[1].config = 0;
+		ddr_cfg_regs.cs[1].config_2 = 0;
+		break;
+	case GPPORCR1_MEM_4GB_CS0_1:
+		gd->ram_size = 0x100000000ULL;
+		break;
+	case GPPORCR1_MEM_512MB_CS0:
+		gd->ram_size = 0x20000000;
+		/* fallthrough for now */
+	case GPPORCR1_MEM_1GB_CS0:
+		gd->ram_size = 0x40000000;
+		/* fallthrough for now */
+	case GPPORCR1_MEM_4GB_CS0_2:
+		gd->ram_size = 0x100000000ULL;
+		/* fallthrough for now */
+	case GPPORCR1_MEM_8GB_CS0_1_2_3:
+		gd->ram_size = 0x200000000ULL;
+		/* fallthrough for now */
+	default:
+		panic("Unsupported memory configuration (%08x)\n", gpporcr1);
+		break;
+	}
 
-	fsl_ddr_set_memctl_regs(&ddr_cfg_regs, 0, 0);
-#endif
-	ddr_size = 4ULL << 30;
-
-	return ddr_size;
-}
-#endif
-
-int fsl_initdram(void)
-{
-#if defined(CONFIG_SPL) && !defined(CONFIG_SPL_BUILD)
-	gd->ram_size = 4ULL << 30;
-#else
+#if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
 #ifdef CONFIG_SYS_DDR_RAW_TIMING
 	puts("Initializing DDR....using raw memory timing\n");
-	gd->ram_size =  fsl_ddr_sdram();
+	gd->ram_size = fsl_ddr_sdram();
 #else
 	puts("Initializeing DDR....using fixed timing\n");
-	gd->ram_size = fixed_sdram();
+	fsl_ddr_set_memctl_regs(&ddr_cfg_regs, 0, 0);
 #endif
 #endif
 
