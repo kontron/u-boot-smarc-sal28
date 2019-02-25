@@ -59,6 +59,8 @@
 #define CONFIG_LAST_STAGE_INIT
 
 /* Miscellaneous configurable options */
+#define CONFIG_MISC_INIT_R
+
 #define CONFIG_SYS_LOAD_ADDR    (CONFIG_SYS_DDR_SDRAM_BASE + 0x10000000)
 
 /* Environment */
