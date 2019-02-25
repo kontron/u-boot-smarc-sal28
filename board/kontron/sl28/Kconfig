@@ -23,6 +23,6 @@ config SYS_LS_PPA_FW_ADDR
 	default 0x00400000 if SYS_LS_PPA_FW_IN_MMC && ARCH_LS1028A
 endif
 
-source "board/freescale/common/Kconfig"
+source "board/kontron/common/Kconfig"
 
 endif
