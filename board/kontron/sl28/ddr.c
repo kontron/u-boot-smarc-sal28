@@ -133,7 +133,6 @@ found:
 dimm_params_t ddr_raw_timing = {
 	.n_ranks = 2,
 	.rank_density = 0x80000000u,
-	.capacity = 0x080000000u,
 	.primary_sdram_width = 32,
 	.ec_sdram_width = 4,
 	.registered_dimm = 0,
@@ -168,9 +167,40 @@ int fsl_ddr_get_dimm_params(dimm_params_t *pdimm,
 			    unsigned int dimm_number)
 {
 	static const char dimm_model[] = "Fixed DDR on board";
+	u32 gpporcr1 = in_le32(DCFG_BASE + DCFG_GPPORCR1);
 
-	if (((controller_number == 0) && (dimm_number == 0)) ||
-	    ((controller_number == 1) && (dimm_number == 0))) {
+	switch (gpporcr1 & GPPORCR1_MEM_MASK)
+	{
+	case GPPORCR1_MEM_2GB_CS0:
+                ddr_raw_timing.n_ranks = 1;
+                ddr_raw_timing.mirrored_dimm = 0;
+		break;
+	case GPPORCR1_MEM_4GB_CS0_1:
+		break;
+	case GPPORCR1_MEM_1GB_CS0:
+                ddr_raw_timing.n_ranks = 1;
+                ddr_raw_timing.n_row_addr = 15;
+                ddr_raw_timing.rank_density = 0x40000000;
+                ddr_raw_timing.mirrored_dimm = 0;
+		break;
+	case GPPORCR1_MEM_512MB_CS0:
+                ddr_raw_timing.n_ranks = 1;
+                ddr_raw_timing.n_row_addr = 14;
+                ddr_raw_timing.rank_density = 0x20000000;
+                ddr_raw_timing.mirrored_dimm = 0;
+		break;
+	case GPPORCR1_MEM_4GB_CS0_2:
+		gd->ram_size = 0x100000000ULL;
+		/* fallthrough for now */
+	case GPPORCR1_MEM_8GB_CS0_1_2_3:
+		gd->ram_size = 0x200000000ULL;
+		/* fallthrough for now */
+	default:
+		panic("Unsupported memory configuration (%08x)\n", gpporcr1);
+		break;
+	}
+
+	if ( ((controller_number == 0) && (dimm_number == 0)) ) {
 		memcpy(pdimm, &ddr_raw_timing, sizeof(dimm_params_t));
 		memset(pdimm->mpart, 0, sizeof(pdimm->mpart));
 		memcpy(pdimm->mpart, dimm_model, sizeof(dimm_model) - 1);
@@ -182,6 +212,7 @@ int fsl_ddr_get_dimm_params(dimm_params_t *pdimm,
 
 int fsl_initdram(void)
 {
+#ifndef CONFIG_SYS_DDR_RAW_TIMING
 	u32 gpporcr1 = in_le32(DCFG_BASE + DCFG_GPPORCR1);
 
 	/* fixed sdram settings for SL28 */
@@ -264,6 +295,7 @@ int fsl_initdram(void)
 		panic("Unsupported memory configuration (%08x)\n", gpporcr1);
 		break;
 	}
+#endif
 
 #if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
 #ifdef CONFIG_SYS_DDR_RAW_TIMING
