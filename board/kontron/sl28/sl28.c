@@ -12,7 +12,7 @@
 #include <hwconfig.h>
 #include <fdt_support.h>
 #include <linux/libfdt.h>
-#include <environment.h>
+#include <env_internal.h>
 #include <asm/arch-fsl-layerscape/soc.h>
 #include <i2c.h>
 #include <asm/arch/soc.h>
@@ -26,6 +26,8 @@
 #include <fdtdec.h>
 #include <miiphy.h>
 #include <fsl_memac.h>
+
+#include "../common/emb_eep.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -197,7 +199,19 @@ static void setup_sgmii(void)
 		printf("PCS[0] didn't link up, giving up. (%04x)\n", value);
 }
 
+int misc_init_r(void)
+{
+	puts("misc_init_r: START\n");
+#ifdef CONFIG_EMB_EEP_I2C
+	/* EMB_EEP_I2C_BUS_NUM_1 = CONFIG_EMB_EEP_I2C_BUS_NUM_EE1; */
+	emb_eep_init_r(1, 1, 4);
+#endif
+
+	return 0;
+}
+
 #define DCFG_RCWSR27 0x168
+
 int last_stage_init(void)
 {
 	u32 rcwsr27 = in_le32(DCFG_BASE + DCFG_RCWSR27);
@@ -216,5 +230,57 @@ int last_stage_init(void)
 void *video_hw_init(void)
 {
 	return NULL;
+}
+#endif
+
+#if defined(CONFIG_CMD_KBOARDINFO)
+char *getSerNo(void)
+{
+	struct env_entry e;
+	static struct env_entry *ep;
+
+	e.key = "serial#";
+	e.data = NULL;
+	hsearch_r (e, ENV_FIND, &ep, &env_htab, 0);
+	if (ep == NULL)
+		return "na";
+	else
+		return ep->data;
+}
+
+char *getSapId(int eeprom_num)
+{
+	return (emb_eep_find_string_in_dmi(eeprom_num, 2, 5));
+}
+
+char *getManufacturer(int eeprom_num)
+{
+	return (emb_eep_find_string_in_dmi(eeprom_num, 2, 1));
+}
+
+char *getProductName(int eeprom_num)
+{
+	return (emb_eep_find_string_in_dmi(eeprom_num, 2, 2));
+}
+
+char *getManufacturerDate (int eeprom_num)
+{
+        return (emb_eep_find_string_in_dmi(eeprom_num, 160, 2));
+}
+
+char *getRevision (int eeprom_num)
+{
+        return (emb_eep_find_string_in_dmi(eeprom_num, 2, 3));
+}
+
+char *getMacAddress (int eeprom_num, int eth_num)
+{
+        char *macaddress;
+
+        macaddress = emb_eep_find_mac_in_dmi(eeprom_num, eth_num);
+        if (macaddress != NULL)
+                return (macaddress);
+        else
+                return "na";
 }
 #endif
