@@ -13,13 +13,13 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#define GPPORCR1_MEM_MASK           (0xf << 4)
-#define GPPORCR1_MEM_512MB_CS0      (0 << 4)
-#define GPPORCR1_MEM_1GB_CS0        (1 << 4)
-#define GPPORCR1_MEM_2GB_CS0        (2 << 4)
-#define GPPORCR1_MEM_4GB_CS0_1      (3 << 4)
-#define GPPORCR1_MEM_4GB_CS0_2      (4 << 4)
-#define GPPORCR1_MEM_8GB_CS0_1_2_3  (5 << 4)
+#define GPPORCR1_MEM_MASK           (0x7 << 5)
+#define GPPORCR1_MEM_512MB_CS0      (0 << 5)
+#define GPPORCR1_MEM_1GB_CS0        (1 << 5)
+#define GPPORCR1_MEM_2GB_CS0        (2 << 5)
+#define GPPORCR1_MEM_4GB_CS0_1      (3 << 5)
+#define GPPORCR1_MEM_4GB_CS0_2      (4 << 5)
+#define GPPORCR1_MEM_8GB_CS0_1_2_3  (5 << 5)
 
 #define DCFG_GPPORCR1 0x20
 
