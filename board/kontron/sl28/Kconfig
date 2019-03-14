@@ -13,8 +13,7 @@ config SYS_CONFIG_NAME
 	default "kontron_sl28"
 
 config SYS_TEXT_BASE
-	default 0x96000000 if SD_BOOT
-	default 0x20010000
+	default 0x96000000
 
 if FSL_LS_PPA
 config SYS_LS_PPA_FW_ADDR

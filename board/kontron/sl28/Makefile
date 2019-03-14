@@ -6,3 +6,5 @@
 
 obj-y += sl28.o
 obj-y += ddr.o
+
+obj-$(CONFIG_SPL_BUILD) += spl.o
