@@ -11,18 +11,32 @@
 #include "fsl-ls1028a.dtsi"
 
 / {
+	u-boot,dm-pre-reloc;
 	model = "Kontron SMARC-sAL28 Board";
 	compatible = "kontron,sl28", "fsl,ls1028a";
+
 	aliases {
 		spi0 = &fspi;
+		mmc0 = &esdhc0;
+		mmc1 = &esdhc1;
+	};
+
+	config {
+		u-boot,spl-payload-offset = <0x26000>;
 	};
 };
 
+&esdhc0 {
+	u-boot,dm-pre-reloc;
+};
+
 &fspi {
+	u-boot,dm-pre-reloc;
 	bus-num = <0>;
 	status = "okay";
 
 	qflash0: w25q32jw@0 {
+		u-boot,dm-pre-reloc;
 		#address-cells = <1>;
 		#size-cells = <1>;
 		compatible = "spi-flash";
