@@ -123,15 +123,19 @@
 #define CONFIG_SYS_SPL_MALLOC_SIZE     0x00100000
 #define CONFIG_SYS_SPL_MALLOC_START    0x80200000
 #define CONFIG_SYS_MONITOR_LEN         (1024 * 1024)
-#endif
 
+#define CONFIG_SPL_SPI_LOAD
+#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x26000
+#define CONFIG_SYS_SPI_U_BOOT_SIZE	(0x100000 - (CONFIG_SYS_SPI_U_BOOT_OFFS))
+
+#endif
 
 #define CONFIG_SYS_CLK_FREQ             100000000 /* 100 MHz base clock */
 #define CONFIG_DDR_CLK_FREQ             100000000 /* 100 MHz base clock */
 #define COUNTER_FREQUENCY_REAL          (CONFIG_SYS_CLK_FREQ/4)
 
 /* DDR */
-#define CONFIG_SYS_DDR_RAW_TIMING
+/* #define CONFIG_SYS_DDR_RAW_TIMING */
 #define CONFIG_DDR_ECC
 #define CONFIG_ECC_INIT_VIA_DDRCONTROLLER
 #define CONFIG_MEM_INIT_VALUE           0xdeadbeef
@@ -178,9 +182,8 @@
 #define CONFIG_SCSI_AHCI_PLAT
 #define CONFIG_SYS_SATA1                        AHCI_BASE_ADDR1
 
-#if defined(CONFIG_SD_BOOT)
+/* needed for SDHC DMA transfers */
 #define CONFIG_TZPC_OCRAM_BSS_HEAP_NS
 #define OCRAM_NONSECURE_SIZE            0x00010000
-#endif
 
 #endif /* __SL28_H */
