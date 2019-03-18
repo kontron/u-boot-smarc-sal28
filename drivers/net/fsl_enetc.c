@@ -103,16 +103,6 @@ enetc_resume_setup:
 	enetc_setup_port_macs();
 }
 
-static struct pci_device_id enetc_ids[] = {
-	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0xe100) },
-	{}
-};
-
-static struct pci_device_id netc_mdio_ids[] = {
-	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0xee01) },
-	{}
-};
-
 static int pcie_enetc_ofdata_to_platdata(struct udevice *dev)
 {
 	struct enetc_rcie *pcie = dev_get_priv(dev);
@@ -971,9 +961,15 @@ U_BOOT_DRIVER(pci_enetc) = {
 	.priv_auto_alloc_size	= sizeof(struct enetc_rcie),
 };
 
+static const struct udevice_id enetc_ids[] = {
+	{ .compatible = "fsl,ls-enetc" },
+	{ }
+};
+
 U_BOOT_DRIVER(eth_enetc) = {
 	.name	= "ls_enetc_eth",
 	.id		= UCLASS_ETH,
+	.of_match = enetc_ids,
 	.bind	= enetc_bind,
 	.probe	= enetc_probe,
 	.remove = enetc_remove,
@@ -1002,14 +998,32 @@ static const struct eth_ops netc_mdio_ops = {
 	.stop	= netc_mdio_stop,
 };
 
+static const struct udevice_id netc_mdio_ids[] = {
+	{ .compatible = "fsl,netc-mdio" },
+	{ }
+};
+
 U_BOOT_DRIVER(netc_mdio) = {
 	.name	= ENETC_MDIO_NAME,
 	.id	= UCLASS_ETH,
+	.of_match = netc_mdio_ids,
 	.probe	= netc_mdio_probe,
 	.remove = netc_mdio_remove,
 	.ops	= &netc_mdio_ops,
 	.priv_auto_alloc_size = sizeof(struct netc_mdio_priv),
 };
 
-U_BOOT_PCI_DEVICE(eth_enetc, enetc_ids);
-U_BOOT_PCI_DEVICE(netc_mdio, netc_mdio_ids);
+#if CONFIG_SYS_ENEC_REGISTER_PCI_DEVICES
+static struct pci_device_id enetc_pci_ids[] = {
+	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0xe100) },
+	{}
+};
+
+static struct pci_device_id netc_mdio_pci_ids[] = {
+	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0xee01) },
+	{}
+};
+
+U_BOOT_PCI_DEVICE(eth_enetc, enetc_pci_ids);
+U_BOOT_PCI_DEVICE(netc_mdio, netc_mdio_pci_ids);
+#endif
