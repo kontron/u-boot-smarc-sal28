@@ -19,6 +19,9 @@
 		spi0 = &fspi;
 		mmc0 = &esdhc0;
 		mmc1 = &esdhc1;
+		eth_p0 = &eth_p0;
+		eth_p1 = &eth_p1;
+		ethernet2 = &netc_mdio;
 	};
 
 	config {
@@ -46,15 +49,38 @@
 };
 
 &enetc_pcie {
-	ethernet@0 {
+	eth_p0: ethernet@0 {
+		compatible = "fsl,ls-enetc";
+		reg = <0x00000000 0x0 0x0 0x0 0x0>;
 		phy-mode = "sgmii";
 		phy-handle = <&enetc_phy1>;
+		status = "okay";
 	};
-	ethernet@1 {
+
+	eth_p1: ethernet@1 {
+		compatible = "fsl,ls-enetc";
+		reg = <0x00000100 0x0 0x0 0x0 0x0>;
 		phy-mode = "rgmii";
 		phy-handle = <&enetc_phy0>;
+		status = "okay";
 	};
-	netc_mdio {
+
+	ethernet@2 {
+		compatible = "fsl,ls-enetc";
+		reg = <0x00000200 0x0 0x0 0x0 0x0>;
+		status = "disabled";
+	};
+
+	ethernet@3 {
+		compatible = "fsl,ls-enetc";
+		reg = <0x00000600 0x0 0x0 0x0 0x0>;
+		status = "disabled";
+	};
+
+	netc_mdio: netc_mdio {
+		compatible = "fsl,netc-mdio";
+		reg = <0x00000300 0x0 0x0 0x0 0x0>;
+
 		#address-cells=<0>;
 		#size-cells=<1>;
 		enetc_phy0: phy@4 {
