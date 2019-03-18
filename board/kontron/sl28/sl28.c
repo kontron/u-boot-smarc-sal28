@@ -31,6 +31,25 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#define DCFG_RCWSR27 0x168
+#define DCFG_RCWSR29 0x170
+static bool sl28_has_rgmii(void)
+{
+	u32 rcwsr27 = in_le32(DCFG_BASE + DCFG_RCWSR27);
+
+	debug("%s: rcwsr27=%08x\n", __func__, rcwsr27);
+	return ((rcwsr27 & 0x3000007e) == 0);
+}
+
+static bool sl28_has_sgmii(void)
+{
+	u32 rcwsr29 = in_le32(DCFG_BASE + DCFG_RCWSR29);
+
+	debug("%s: rcwsr29=%08x\n", __func__, rcwsr29);
+	return (   ((rcwsr29 & 0x00f00000) == 0x00800000)
+	        || ((rcwsr29 & 0x000f0000) == 0x00080000));
+}
+
 int board_init(void)
 {
 #ifdef CONFIG_ENV_IS_NOWHERE
@@ -156,7 +175,6 @@ phy_err:
 	printf("RGMII PHY access error, giving up.\n");
 }
 
-extern int serdes_protocol;
 extern void enetc_imdio_write(struct mii_dev *bus, int port, int dev, int reg, u16 val);
 extern int enetc_imdio_read(struct mii_dev *bus, int port, int dev, int reg);
 static void setup_sgmii(void)
@@ -201,7 +219,7 @@ static void setup_sgmii(void)
 
 int misc_init_r(void)
 {
-	puts("misc_init_r: START\n");
+	debug("%s()\n", __func__);
 #ifdef CONFIG_EMB_EEP_I2C
 	/* EMB_EEP_I2C_BUS_NUM_1 = CONFIG_EMB_EEP_I2C_BUS_NUM_EE1; */
 	emb_eep_init_r(1, 1, 4);
@@ -210,17 +228,12 @@ int misc_init_r(void)
 	return 0;
 }
 
-#define DCFG_RCWSR27 0x168
-
 int last_stage_init(void)
 {
-	u32 rcwsr27 = in_le32(DCFG_BASE + DCFG_RCWSR27);
-
-	if ((rcwsr27 & 0x3000007e) == 0)
+	if (sl28_has_rgmii())
 		setup_rgmii();
 
-	if (   ((serdes_protocol & 0x00f0) == 0x0080)
-	    || ((serdes_protocol & 0x000f) == 0x0008))
+	if (sl28_has_sgmii())
 		setup_sgmii();
 
 	return 0;
@@ -232,6 +245,26 @@ void *video_hw_init(void)
 	return NULL;
 }
 #endif
+
+
+int board_fix_fdt(void *rw_fdt_blob)
+{
+	debug("%s\n", __func__);
+
+	fdt_increase_size(rw_fdt_blob, 32);
+
+	if (!sl28_has_sgmii()) {
+		debug("%s: disabling eth_p0\n", __func__);
+		fdt_status_disabled_by_alias(rw_fdt_blob, "eth_p0");
+	}
+
+	if (!sl28_has_rgmii()) {
+		debug("%s: disabling eth_p1\n", __func__);
+		fdt_status_disabled_by_alias(rw_fdt_blob, "eth_p1");
+	}
+
+	return 0;
+}
 
 #if defined(CONFIG_CMD_KBOARDINFO)
 char *getSerNo(void)
