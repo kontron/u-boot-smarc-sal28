@@ -18,7 +18,7 @@ config SYS_TEXT_BASE
 if FSL_LS_PPA
 config SYS_LS_PPA_FW_ADDR
 	hex "PPA Firmware Addr"
-	default 0x20400000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
+	default 0x20140000 if SYS_LS_PPA_FW_IN_XIP && ARCH_LS1028A
 	default 0x00400000 if SYS_LS_PPA_FW_IN_MMC && ARCH_LS1028A
 endif
 
