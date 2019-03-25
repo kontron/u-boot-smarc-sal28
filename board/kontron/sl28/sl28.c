@@ -31,23 +31,43 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#define GPINFO_HW_VARIANT_MASK 0xff
+#define GPINFO_HAS_SGMII       BIT(8)
+#define GPINFO_HAS_RGMII       BIT(9)
+
+#define DCFG_RCWSR25 0x160
 #define DCFG_RCWSR27 0x168
 #define DCFG_RCWSR29 0x170
 static bool sl28_has_rgmii(void)
 {
+	u32 rcwsr25 = in_le32(DCFG_BASE + DCFG_RCWSR25);
 	u32 rcwsr27 = in_le32(DCFG_BASE + DCFG_RCWSR27);
 
-	debug("%s: rcwsr27=%08x\n", __func__, rcwsr27);
-	return ((rcwsr27 & 0x3000007e) == 0);
+	debug("%s: rcwsr25=%08x rcwsr27=%08x\n", __func__, rcwsr25, rcwsr27);
+
+	if (!(rcwsr25 & GPINFO_HAS_RGMII))
+		return 0;
+
+	if ((rcwsr27 & 0x3000007e) != 0)
+		return 0;
+
+	return 1;
 }
 
 static bool sl28_has_sgmii(void)
 {
+	u32 rcwsr25 = in_le32(DCFG_BASE + DCFG_RCWSR25);
 	u32 rcwsr29 = in_le32(DCFG_BASE + DCFG_RCWSR29);
 
-	debug("%s: rcwsr29=%08x\n", __func__, rcwsr29);
-	return (   ((rcwsr29 & 0x00f00000) == 0x00800000)
-	        || ((rcwsr29 & 0x000f0000) == 0x00080000));
+	debug("%s: rcwsr25=%08x rcwsr29=%08x\n", __func__, rcwsr25, rcwsr29);
+
+	if (!(rcwsr25 & GPINFO_HAS_SGMII))
+		return 0;
+
+	if ((rcwsr29 & 0x000f0000) != 0x00080000)
+		return 0;
+
+	return 1;
 }
 
 int board_init(void)
