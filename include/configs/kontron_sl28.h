@@ -88,12 +88,18 @@
                 "&& tftp $fdt_addr 10.0.1.36:b/sl28/dtb${release} " \
                 "&& tftp $ramdisk_addr 10.0.1.36:b/sl28/rootfs${release} " \
                 "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
-        "update_rcw=dhcp && tftp 10.0.1.36:b/sl28/rcw " \
-                "&& sf probe 0 && sf update $fileaddr 0 $filesize\0" \
-        "update_uboot=dhcp && tftp 10.0.1.36:b/sl28/u-boot " \
-                "&& sf probe 0 && sf update $fileaddr 0x10000 $filesize\0" \
-        "update_dp_firmware=dhcp && tftp 10.0.1.36:b/sl28/dp-firmware " \
-                "&& sf probe 0 && sf update $fileaddr 0x100000 $filesize\0"
+		"set_tftp_rcw_uri=setenv uri 10.0.1.36:b/sl28/rcw/$rcw_filename\0" \
+		"set_tftp_uboot_uri=setenv uri 10.0.1.36:b/sl28/u-boot\0" \
+		"set_tftp_dp_firmware_uri=setenv uri 10.0.1.36:b/sl28/dp-firmware\0" \
+		"set_tftp_spi_flash_img_uri=setenv uri 10.0.1.36:b/sl28/spi-flash.img\0" \
+        "update_rcw=dhcp && run set_tftp_rcw_uri && tftp $uri " \
+                "&& i2c write $fileaddr 50 0.2 $filesize\0" \
+        "update_uboot=dhcp && run set_tftp_uboot_uri && tftp $uri " \
+                "&& sf probe 0 && sf update $fileaddr 0x210000 $filesize\0" \
+        "update_dp_firmware=dhcp && run set_tftp_dp_firmware_uri && tftp $uri " \
+                "&& sf probe 0 && sf update $fileaddr 0x300000 $filesize\0" \
+        "update_all=dhcp && run set_tftp_spi_flash_img_uri && tftp $uri " \
+                "&& sf probe 0 && sf update $fileaddr 0 $filesize\0"
 
 /* Monitor Command Prompt */
 #define CONFIG_SYS_CBSIZE               512     /* Console I/O Buffer Size */
