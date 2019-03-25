@@ -878,7 +878,7 @@ int fsl_setenv_mcinitcmd(void)
 #endif
 
 #ifdef CONFIG_BOARD_LATE_INIT
-int board_late_init(void)
+int armv8_ls_board_late_init(void)
 {
 #ifdef CONFIG_CHAIN_OF_TRUST
 	fsl_setenv_chain_of_trust();
@@ -916,5 +916,11 @@ int board_late_init(void)
 #endif
 
 	return 0;
+}
+
+/* let the board code define its own board_late_init */
+__weak int board_late_init(void)
+{
+	return armv8_ls_board_late_init();
 }
 #endif
