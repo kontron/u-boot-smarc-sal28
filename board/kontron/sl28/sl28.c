@@ -38,6 +38,14 @@ DECLARE_GLOBAL_DATA_PTR;
 #define DCFG_RCWSR25 0x160
 #define DCFG_RCWSR27 0x168
 #define DCFG_RCWSR29 0x170
+static int sl28_variant(void)
+{
+	u32 rcwsr25 = in_le32(DCFG_BASE + DCFG_RCWSR25);
+
+	debug("%s: rcwsr25=%08x\n", __func__, rcwsr25);
+	return rcwsr25 & GPINFO_HW_VARIANT_MASK;
+}
+
 static bool sl28_has_rgmii(void)
 {
 	u32 rcwsr25 = in_le32(DCFG_BASE + DCFG_RCWSR25);
@@ -70,6 +78,44 @@ static bool sl28_has_sgmii(void)
 	return 1;
 }
 
+/*
+ * Kontron supplies a list of pregenerated RCWs for different use cases.
+ * Map the rcw configuration back to the naming scheme.
+ */
+static char *sl28_rcw_filename(char *buf, size_t len)
+{
+	static const char map[] = "_x_X_q__gG_124s_";
+	char postfix[8];
+	u32 rcwsr29 = in_le32(DCFG_BASE + DCFG_RCWSR29);
+	int variant = sl28_variant();
+
+	postfix[0] = map[(rcwsr29 >> 24) & 0xf];
+	postfix[1] = map[(rcwsr29 >> 28) & 0xf];
+	postfix[2] = map[(rcwsr29 >> 16) & 0xf];
+	postfix[3] = map[(rcwsr29 >> 20) & 0xf];
+	postfix[4] = '\0';
+
+	/* mask the PCI lanes which are not available on each variant */
+	switch(variant)
+	{
+	case 2:
+		postfix[3] = '_';
+		/* fall through */
+	case 3:
+	case 4:
+		postfix[2] = '_';
+		break;
+	default:
+		break;
+	}
+
+	snprintf(buf, len,
+		 "sl28-%d-%s.bin", variant, postfix);
+	buf[len-1] = '\0';
+
+	return buf;
+}
+
 int board_init(void)
 {
 #ifdef CONFIG_ENV_IS_NOWHERE
@@ -82,6 +128,41 @@ int board_init(void)
 
 	/* run PCI init to kick off ENETC */
 	pci_init();
+
+	return 0;
+}
+
+int checkboard(void)
+{
+	static const char *variants[] = {
+		"unknown",
+		"4 Lane",
+		"TSN-on-module",
+		"Single PHY",
+		"Dual PHY"
+	};
+	char buf[32];
+	int variant = sl28_variant();
+	const char *variant_name;
+
+	if (variant >= 0 && variant < ARRAY_SIZE(variants))
+		variant_name = variants[variant];
+	else
+		variant_name = variants[0];
+
+	printf("       Hardware Variant: %s (%d)\n"
+	       "       RCW: %s\n",
+		   variant_name, variant, sl28_rcw_filename(buf, sizeof(buf)));
+
+	return 0;
+}
+
+int fsl_board_late_init(void)
+{
+	char buf[32];
+
+	env_set_ulong("variant", sl28_variant());
+	env_set("rcw_filename", sl28_rcw_filename(buf, sizeof(buf)));
 
 	return 0;
 }
