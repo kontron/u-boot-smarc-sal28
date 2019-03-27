@@ -411,15 +411,7 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 
 	hw->phy_addr = -1;
 
-	sprintf(name, "ethernet@%u", hw->devno);
-	parent = dev_of_offset(dev->parent);
-
-	node = fdt_subnode_offset(fdt, parent, name);
-	/*TODO: check if ethernet node is enabled */
-	if (node <= 0) {
-		ENETC_DBG(hw, "no %s node in DT\n", name);
-		return -EINVAL;
-	}
+	node = ofnode_to_offset(dev->node);
 	phy_mode = fdt_getprop(fdt, node, "phy-mode", NULL);
 	if (phy_intf < 0 || !phy_mode) {
 		ENETC_DBG(hw, "%s: missing or invalid PHY mode, ignoring PHY\n", name);
