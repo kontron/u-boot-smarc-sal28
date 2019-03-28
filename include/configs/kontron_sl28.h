@@ -67,39 +67,55 @@
 /* Allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 
+#define CONFIG_LOADADDR 0x81000000
+#define ENV_MEM_LAYOUT_SETTINGS \
+	"scriptaddr=0x90000000\0" \
+	"pxefile_addr_r=0x90100000\0" \
+	"kernel_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
+	"fdt_addr_r=0x82000000\0" \
+	"ramdisk_addr_r=0x82100000\0"
+
+#define BOOTENV_DEV_DAILY(devtypeu, devtypel, instance) \
+	"boot_script_daily=10.0.1.36:s/sl28\0" \
+	"bootcmd_daily=" \
+		"setenv autoload no; " \
+		"dhcp; " \
+		"if tftp ${scriptaddr} ${boot_script_daily}; then " \
+			"source ${scriptaddr}:" #instance "; " \
+		"fi;" \
+		"\0"
+#define BOOTENV_DEV_NAME_DAILY(devtypeu, devtypel, instance) \
+	"daily "
+
+#ifndef CONFIG_SPL_BUILD
+#define BOOT_TARGET_DEVICES(func) \
+	func(MMC, mmc, 1) \
+	func(MMC, mmc, 0) \
+	func(USB, usb, 0) \
+	func(DAILY, daily, daily)
+#include <config_distro_bootcmd.h>
+#else
+#define BOOTENV
+#endif
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
-        "autoload=no\0" \
-        "fdt_addr=0x80ff0000\0" \
-        "loadaddr=0xa0000000\0" \
-        "kernel_addr=0x81000000\0" \
-        "ramdisk_addr=0x90000000\0" \
+        "bootargs=default_hugepagesz=2m hugepagesz=2m hugepages=256 video=1920x1080-32@60 cma=256M\0" \
         "fdt_high=0xffffffffffffffff\0" \
         "initrd_high=0xffffffffffffffff\0" \
-        "bootcmd=run bootcmd_${bootsource}\0" \
-        "bootargs=default_hugepagesz=2m hugepagesz=2m hugepages=256 video=1920x1080-32@60 cma=256M\0" \
-        "bootsource=mmc\0" \
-        "bootcmd_mmc=load mmc 0:1 $kernel_addr /kernel " \
-                "&& load mmc 0:1 $fdt_addr /dtb " \
-                "&& load mmc 0:1 $ramdisk_addr /rootfs " \
-                "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
-        "bootcmd_daily=dhcp && tftp $loadaddr 10.0.1.36:b/sl28/dp-firmware${release} " \
-                "&& hdp load $loadaddr 0x2000 " \
-                "&& tftp $kernel_addr 10.0.1.36:b/sl28/kernel${release} " \
-                "&& tftp $fdt_addr 10.0.1.36:b/sl28/dtb${release} " \
-                "&& tftp $ramdisk_addr 10.0.1.36:b/sl28/rootfs${release} " \
-                "&& booti $kernel_addr $ramdisk_addr $fdt_addr\0" \
 		"set_tftp_rcw_uri=setenv uri 10.0.1.36:b/sl28/rcw/$rcw_filename\0" \
 		"set_tftp_uboot_uri=setenv uri 10.0.1.36:b/sl28/u-boot\0" \
 		"set_tftp_dp_firmware_uri=setenv uri 10.0.1.36:b/sl28/dp-firmware\0" \
 		"set_tftp_spi_flash_img_uri=setenv uri 10.0.1.36:b/sl28/spi-flash.img\0" \
-        "update_rcw=dhcp && run set_tftp_rcw_uri && tftp $uri " \
+        "update_rcw=setenv autoload no; dhcp && run set_tftp_rcw_uri && tftp $uri " \
                 "&& i2c write $fileaddr 50 0.2 $filesize\0" \
-        "update_uboot=dhcp && run set_tftp_uboot_uri && tftp $uri " \
+        "update_uboot=setenv autoload no; dhcp && run set_tftp_uboot_uri && tftp $uri " \
                 "&& sf probe 0 && sf update $fileaddr 0x210000 $filesize\0" \
-        "update_dp_firmware=dhcp && run set_tftp_dp_firmware_uri && tftp $uri " \
+        "update_dp_firmware=setenv autoload no; dhcp && run set_tftp_dp_firmware_uri && tftp $uri " \
                 "&& sf probe 0 && sf update $fileaddr 0x300000 $filesize\0" \
-        "update_all=dhcp && run set_tftp_spi_flash_img_uri && tftp $uri " \
-                "&& sf probe 0 && sf update $fileaddr 0 $filesize\0"
+        "update_all=setenv autoload no; dhcp && run set_tftp_spi_flash_img_uri && tftp $uri " \
+                "&& sf probe 0 && sf update $fileaddr 0 $filesize\0" \
+		ENV_MEM_LAYOUT_SETTINGS \
+		BOOTENV
 
 /* Monitor Command Prompt */
 #define CONFIG_SYS_CBSIZE               512     /* Console I/O Buffer Size */
