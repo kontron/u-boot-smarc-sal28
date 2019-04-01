@@ -51,6 +51,21 @@ was bootet from and copies the proper u-boot from the SPI flash (either
 from the failsafe or from the normal offset) or from SD card to SDRAM and
 jumps to its entry point.
 
+## One Binary To Rule Them All
+
+Because the boot process uses the SPL in every case, one binary can be used
+for all boot sources and any offset within these. Eg. the resulting u-boot
+binary can be copied either to the failsafe SPI flash offset, the normal
+boot SPI flash offset or to the SD card. Also, there is only one RCW binary
+which can be used for any of these three storages.
+
+## Environment
+
+If the proper u-boot detects that it is loaded either from failsafe SPI
+flash or from SD card it will only load the compiled-in default
+environment. Otherwise, eg. in the normal SPI boot, the environment is
+loaded from SPI flash offset `3F_0000h`.
+
 ## SPI flash memory map
 
 | Start      | End        | Size     | WP |Contents                         |
