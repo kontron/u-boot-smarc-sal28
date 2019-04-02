@@ -99,7 +99,6 @@
 #endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-        "bootargs=default_hugepagesz=2m hugepagesz=2m hugepages=256 video=1920x1080-32@60 cma=256M\0" \
         "fdt_high=0xffffffffffffffff\0" \
         "initrd_high=0xffffffffffffffff\0" \
 		"hdp_fw_addr=0x20100000\0" \
