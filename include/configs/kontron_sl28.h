@@ -102,6 +102,8 @@
         "bootargs=default_hugepagesz=2m hugepagesz=2m hugepages=256 video=1920x1080-32@60 cma=256M\0" \
         "fdt_high=0xffffffffffffffff\0" \
         "initrd_high=0xffffffffffffffff\0" \
+		"hdp_fw_addr=0x20100000\0" \
+		"hdpload=hdp load ${hdp_fw_addr} 0x2000\0" \
 		"set_tftp_rcw_uri=setenv uri 10.0.1.36:b/sl28/rcw/$rcw_filename\0" \
 		"set_tftp_uboot_uri=setenv uri 10.0.1.36:b/sl28/u-boot\0" \
 		"set_tftp_dp_firmware_uri=setenv uri 10.0.1.36:b/sl28/dp-firmware\0" \
