@@ -99,8 +99,8 @@
 #endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-        "fdt_high=0xffffffffffffffff\0" \
-        "initrd_high=0xffffffffffffffff\0" \
+		"fdt_high=0xffffffffffffffff\0" \
+		"initrd_high=0xffffffffffffffff\0" \
 		"hdp_fw_addr=0x20100000\0" \
 		"hdpload=hdp load ${hdp_fw_addr} 0x2000\0" \
 		"set_tftp_rcw_uri=setenv uri 10.0.1.36:b/sl28/rcw/$rcw_filename\0" \
