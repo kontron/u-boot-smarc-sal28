@@ -32,8 +32,10 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 #define GPINFO_HW_VARIANT_MASK 0xff
-#define GPINFO_HAS_SGMII       BIT(8)
-#define GPINFO_HAS_RGMII       BIT(9)
+#define GPINFO_HAS_EC_SGMII    BIT(8)
+#define GPINFO_HAS_EC_RGMII    BIT(9)
+#define GPINFO_HAS_SW_SGMII0   BIT(10)
+#define GPINFO_HAS_SW_SGMII1   BIT(11)
 
 #define DCFG_RCWSR25 0x160
 #define DCFG_RCWSR27 0x168
@@ -46,36 +48,73 @@ static int sl28_variant(void)
 	return rcwsr25 & GPINFO_HW_VARIANT_MASK;
 }
 
-static bool sl28_has_rgmii(void)
+static bool sl28_has_ec_rgmii(void)
 {
 	u32 rcwsr25 = in_le32(DCFG_BASE + DCFG_RCWSR25);
 	u32 rcwsr27 = in_le32(DCFG_BASE + DCFG_RCWSR27);
 
 	debug("%s: rcwsr25=%08x rcwsr27=%08x\n", __func__, rcwsr25, rcwsr27);
 
-	if (!(rcwsr25 & GPINFO_HAS_RGMII))
-		return 0;
+	if (!(rcwsr25 & GPINFO_HAS_EC_RGMII))
+		return false;
 
 	if ((rcwsr27 & 0x3000007e) != 0)
-		return 0;
+		return false;
 
-	return 1;
+	return true;
 }
 
-static bool sl28_has_sgmii(void)
+static bool sl28_has_ec_sgmii(void)
 {
 	u32 rcwsr25 = in_le32(DCFG_BASE + DCFG_RCWSR25);
 	u32 rcwsr29 = in_le32(DCFG_BASE + DCFG_RCWSR29);
 
 	debug("%s: rcwsr25=%08x rcwsr29=%08x\n", __func__, rcwsr25, rcwsr29);
 
-	if (!(rcwsr25 & GPINFO_HAS_SGMII))
-		return 0;
+	if (!(rcwsr25 & GPINFO_HAS_EC_SGMII))
+		return false;
 
 	if ((rcwsr29 & 0x000f0000) != 0x00080000)
-		return 0;
+		return false;
 
-	return 1;
+	return true;
+}
+
+static bool sl28_has_sw_sgmii(int n)
+{
+	u32 rcwsr25 = in_le32(DCFG_BASE + DCFG_RCWSR25);
+	u32 rcwsr29 = in_le32(DCFG_BASE + DCFG_RCWSR29);
+
+	debug("%s: rcwsr25=%08x rcwsr29=%08x\n", __func__, rcwsr25, rcwsr29);
+
+	if (n >= 2)
+		return false;
+
+	if (n == 0 && !(rcwsr25 & GPINFO_HAS_SW_SGMII0))
+		return false;
+
+	if (n == 1 && !(rcwsr25 & GPINFO_HAS_SW_SGMII1))
+		return false;
+
+	if (n == 0 && (rcwsr29 & 0x000f0000) != 0x00090000)
+		return false;
+
+	if (n == 1 && (rcwsr29 & 0x00f00000) != 0x00900000)
+		return false;
+
+	return true;
+}
+
+static bool sl28_has_qsgmii(void)
+{
+	u32 rcwsr29 = in_le32(DCFG_BASE + DCFG_RCWSR29);
+
+	debug("%s: rcwsr29=%08x\n", __func__, rcwsr29);
+
+	if ((rcwsr29 & 0x00f00000) != 0x00500000)
+		return false;
+
+	return true;
 }
 
 /*
@@ -215,10 +254,20 @@ int ft_board_setup(void *blob, bd_t *bd)
 }
 #endif
 
-void setup_rgmii(void)
+#define NETC_PF0_BAR0_BASE	0x1f8010000UL
+#define NETC_PF0_ECAM_BASE	0x1f0000000UL
+#define NETC_PF1_BAR0_BASE	0x1f8050000UL
+#define NETC_PF1_ECAM_BASE	0x1f0001000UL
+#define NETC_PF5_BAR0_BASE	0x1f8140000UL
+#define NETC_PF2_ECAM_BASE	0x1f0002000UL
+#define NETC_PF5_ECAM_BASE	0x1f0005000UL
+#define NETC_PCS_QSGMIICR1	0x001ea1884UL
+#define NETC_PCS_SGMIICR1(n)	(0x001ea1804UL + (n) * 0x10)
+extern void enetc_imdio_write(struct mii_dev *bus, int port, int dev, int reg, u16 val);
+extern int enetc_imdio_read(struct mii_dev *bus, int port, int dev, int reg);
+
+static void setup_ec_rgmii(void)
 {
-	#define NETC_PF1_BAR0_BASE	0x1f8050000
-	#define NETC_PF1_ECAM_BASE	0x1F0001000
 	struct mii_dev *ext_bus;
 	char *mdio_name = "netc_mdio";
 	int phy_addr = 4;
@@ -270,46 +319,146 @@ phy_err:
 	printf("RGMII PHY access error, giving up.\n");
 }
 
-extern void enetc_imdio_write(struct mii_dev *bus, int port, int dev, int reg, u16 val);
-extern int enetc_imdio_read(struct mii_dev *bus, int port, int dev, int reg);
-static void setup_sgmii(void)
+static void setup_sgmii_common(struct mii_dev *bus, int port)
 {
-	#define NETC_PF0_BAR0_BASE	0x1f8010000
-	#define NETC_PF0_ECAM_BASE	0x1f0000000
-	//#define NETC_PCS_SGMIICR1(n)	(0x001ea1804 + (n) * 0x10)
-	struct mii_dev bus = {0};
+	u32 tmp;
 	u16 value;
 	int to;
 
-	//out_le32(NETC_PCS_SGMIICR1(0), 0x00000000);
-	// writing this kills the link for some reason
+	tmp = in_le32(NETC_PCS_SGMIICR1(port));
+	tmp &= ~0xf8000000;
+	tmp |= port << 27;
+	out_le32(NETC_PCS_SGMIICR1(port), tmp);
 
-	/* turn on PCI function */
-	out_le16(NETC_PF0_ECAM_BASE + 4, 0xffff);
-
-	bus.priv = (void *)NETC_PF0_BAR0_BASE + 0x8030;
 	value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
-	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x14, value);
+	enetc_imdio_write(bus, port, MDIO_DEVAD_NONE, 0x14, value);
 	/* Dev ability according to SGMII specification */
 	value = PHY_SGMII_DEV_ABILITY_SGMII;
-	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x04, value);
+	enetc_imdio_write(bus, port, MDIO_DEVAD_NONE, 0x04, value);
 	/* Adjust link timer for SGMII */
-	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x13, 0x0003);
-	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+	enetc_imdio_write(bus, port, MDIO_DEVAD_NONE, 0x13, 0x0003);
+	enetc_imdio_write(bus, port, MDIO_DEVAD_NONE, 0x12, 0x06a0);
 
 	/* restart AN */
 	value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
+	enetc_imdio_write(bus, port, MDIO_DEVAD_NONE, 0x00, value);
 
-	enetc_imdio_write(&bus, 0, MDIO_DEVAD_NONE, 0x00, value);
 	/* wait for link */
 	to = 1000;
 	do {
-		value = enetc_imdio_read(&bus, 0, MDIO_DEVAD_NONE, 0x01);
+		value = enetc_imdio_read(bus, port, MDIO_DEVAD_NONE, 0x01);
 		if ((value & 0x0024) == 0x0024)
 			break;
 	} while (--to);
 	if ((value & 0x0024) != 0x0024)
-		printf("PCS[0] didn't link up, giving up. (%04x)\n", value);
+		printf("PCS[%d] didn't link up, giving up. (%04x)\n", port,value);
+}
+
+static void setup_ec_sgmii(void)
+{
+	struct mii_dev bus = {0};
+	bus.priv = (void *)NETC_PF0_BAR0_BASE + 0x8030;
+
+	/* turn on PCI function */
+	out_le16(NETC_PF0_ECAM_BASE + 4, 0xffff);
+
+	setup_sgmii_common(&bus, 0);
+}
+
+static void setup_sw_sgmii(int n)
+{
+	struct mii_dev bus = {0};
+	bus.priv = (void *)NETC_PF5_BAR0_BASE + 0x8030;
+
+	/* turn on PCI function */
+	out_le16(NETC_PF2_ECAM_BASE + 4, 0xffff);
+	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
+
+	setup_sgmii_common(&bus, n);
+}
+
+void setup_qsgmii(void)
+{
+	struct mii_dev bus = {0}, *ext_bus;
+	u16 value;
+	int i, to;
+
+	//out_le32(NETC_PCS_QSGMIICR1, 0x20000000);
+
+	/* turn on PCI functions */
+	out_le16(NETC_PF2_ECAM_BASE + 4, 0xffff);
+	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
+
+	bus.priv = (void *)NETC_PF5_BAR0_BASE + 0x8030;
+
+	for (i = 0; i < 4; i++) {
+		value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x14, value);
+		/* Dev ability according to SGMII specification */
+		value = PHY_SGMII_DEV_ABILITY_SGMII;
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x04, value);
+		/* Adjust link timer for SGMII */
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x13, 0x0003);
+		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
+	}
+
+#if 0
+	int phy_addr;
+	char *mdio_name;
+	mdio_name = "netc_mdio";
+	phy_addr = 0x10;
+
+	/* set up VSC PHY - this works on RDB only for now*/
+	ext_bus = miiphy_get_dev_by_name(mdio_name);
+	if (!ext_bus) {
+		PCS_ERR("couldn't find MDIO bus, skipping external PHY config\n");
+		return;
+	}
+
+	for (i = phy_addr; i < phy_addr + 4; i++) {
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0010);
+		value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x13);
+		value = (value & 0x3fff) | (1 << 14);
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x12, 0x80e0);
+
+		to = 1000;
+
+		do {
+			value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x12);
+			if (!(value & 0x8000))
+				break;
+		} while (--to);
+		if (value & 0x8000)
+			PCS_ERR("PHY[%d] reset timeout\n", i);
+
+
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
+		value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x17);
+		value = (value & 0xf8ff);
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x17, value);
+
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0003);
+		value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x10);
+		value = value | 0x80;
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x10, value);
+		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
+		ext_bus->write(ext_bus, 1, MDIO_DEVAD_NONE, 0x00, 0x3300);
+	}
+#endif
+
+	for (i = 0; i < 4; i++) {
+		to = 1000;
+		do {
+			value = enetc_imdio_read(&bus, i, MDIO_DEVAD_NONE, 1);
+			if ((value & 0x0024) == 0x0024)
+				break;
+		} while (--to);
+		debug("BMSR: %04x\n", value);
+		if ((value & 0x24) != 0x24) {
+			debug("PCS[%d] didn't link up, giving up.\n", i);
+			break;
+		}
+	}
 }
 
 int misc_init_r(void)
@@ -325,11 +474,21 @@ int misc_init_r(void)
 
 int last_stage_init(void)
 {
-	if (sl28_has_rgmii())
-		setup_rgmii();
+	int i;
 
-	if (sl28_has_sgmii())
-		setup_sgmii();
+	if (sl28_has_ec_rgmii())
+		setup_ec_rgmii();
+
+	if (sl28_has_ec_sgmii())
+		setup_ec_sgmii();
+
+	for (i = 0; i < 4; i++) {
+		if (sl28_has_sw_sgmii(i))
+			setup_sw_sgmii(i);
+	}
+
+	if (sl28_has_qsgmii())
+		setup_qsgmii();
 
 	return 0;
 }
@@ -344,18 +503,35 @@ void *video_hw_init(void)
 
 int board_fix_fdt(void *rw_fdt_blob)
 {
+	bool has_internal_switch = false;
+	int i;
+
 	debug("%s\n", __func__);
 
 	fdt_increase_size(rw_fdt_blob, 32);
 
-	if (!sl28_has_sgmii()) {
+	if (!sl28_has_ec_sgmii()) {
 		debug("%s: disabling eth_p0\n", __func__);
 		fdt_status_disabled_by_alias(rw_fdt_blob, "eth_p0");
 	}
 
-	if (!sl28_has_rgmii()) {
+	if (!sl28_has_ec_rgmii()) {
 		debug("%s: disabling eth_p1\n", __func__);
 		fdt_status_disabled_by_alias(rw_fdt_blob, "eth_p1");
+	}
+
+	for (i = 0; i < 4; i++)
+		if (sl28_has_sw_sgmii(i)) {
+			has_internal_switch = true;
+			break;
+		}
+
+	if (sl28_has_qsgmii())
+		has_internal_switch = true;
+
+	if (has_internal_switch) {
+		debug("%s: enabling eth_p2\n", __func__);
+		fdt_status_okay_by_alias(rw_fdt_blob, "eth_p2");
 	}
 
 	return 0;
