@@ -26,6 +26,7 @@
 		i2c0 = &i2c0;
 		i2c1 = &i2c3;
 		i2c2 = &i2c4;
+		rtc0 = &rtc;
 	};
 
 	config {
@@ -93,6 +94,14 @@
 		enetc_phy1: phy@5 {
 			reg = <5>;
 		};
+	};
+};
+
+
+&i2c0 {
+	rtc: rtc@32 {
+		compatible = "microcrystal,rv8803";
+		reg = <0x32>;
 	};
 };
 
