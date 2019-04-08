@@ -5,6 +5,7 @@
 obj-y += cpu.o
 obj-y += lowlevel.o
 obj-y += soc.o
+obj-y += clock.o
 ifndef CONFIG_SPL_BUILD
 obj-$(CONFIG_MP) += mp.o
 obj-$(CONFIG_OF_LIBFDT) += fdt.o
