@@ -30,6 +30,12 @@ config RTC_DS1307
 	  Support for Dallas Semiconductor (now Maxim) DS1307 and DS1338/9 and
 	  compatible Real Time Clock devices.
 
+config RTC_RV8803
+	bool "Enable RV8803 driver"
+	depends on DM_RTC
+	help
+	  Support for Microcrystal RV8803 Real Time Clock devices.
+
 config RTC_RX8010SJ
 	bool "Enable RX8010SJ driver"
 	depends on DM_RTC
