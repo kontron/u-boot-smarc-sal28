@@ -17,6 +17,7 @@
 
 	aliases {
 		spi0 = &fspi;
+		spi1 = &dspi2;
 		mmc0 = &esdhc0;
 		mmc1 = &esdhc1;
 		eth_p0 = &eth_p0;
@@ -51,6 +52,11 @@
 		spi-max-frequency = <133000000>;
 		reg = <0>;
 	 };
+};
+
+&dspi2 {
+	u-boot,dm-pre-reloc;
+	status = "okay";
 };
 
 &enetc_pcie {
