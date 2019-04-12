@@ -212,6 +212,7 @@ int fsl_ddr_get_dimm_params(dimm_params_t *pdimm,
 
 int fsl_initdram(void)
 {
+	phys_size_t dram_size;
 #ifndef CONFIG_SYS_DDR_RAW_TIMING
 	u32 gpporcr1 = in_le32(DCFG_BASE + DCFG_GPPORCR1);
 
@@ -271,25 +272,25 @@ int fsl_initdram(void)
 	switch (gpporcr1 & GPPORCR1_MEM_MASK)
 	{
 	case GPPORCR1_MEM_2GB_CS0:
-		gd->ram_size = 0x80000000;
+		dram_size = 0x80000000;
 		ddr_cfg_regs.cs[1].bnds = 0;
 		ddr_cfg_regs.cs[1].config = 0;
 		ddr_cfg_regs.cs[1].config_2 = 0;
 		break;
 	case GPPORCR1_MEM_4GB_CS0_1:
-		gd->ram_size = 0x100000000ULL;
+		dram_size = 0x100000000ULL;
 		break;
 	case GPPORCR1_MEM_512MB_CS0:
-		gd->ram_size = 0x20000000;
+		dram_size = 0x20000000;
 		/* fallthrough for now */
 	case GPPORCR1_MEM_1GB_CS0:
-		gd->ram_size = 0x40000000;
+		dram_size = 0x40000000;
 		/* fallthrough for now */
 	case GPPORCR1_MEM_4GB_CS0_2:
-		gd->ram_size = 0x100000000ULL;
+		dram_size = 0x100000000ULL;
 		/* fallthrough for now */
 	case GPPORCR1_MEM_8GB_CS0_1_2_3:
-		gd->ram_size = 0x200000000ULL;
+		dram_size = 0x200000000ULL;
 		/* fallthrough for now */
 	default:
 		panic("Unsupported memory configuration (%08x)\n", gpporcr1);
@@ -300,12 +301,18 @@ int fsl_initdram(void)
 #if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
 #ifdef CONFIG_SYS_DDR_RAW_TIMING
 	puts("Initializing DDR....using raw memory timing\n");
-	gd->ram_size = fsl_ddr_sdram();
+	dram_size = fsl_ddr_sdram();
 #else
 	puts("Initializeing DDR....using fixed timing\n");
 	fsl_ddr_set_memctl_regs(&ddr_cfg_regs, 0, 0);
 #endif
+#else
+#ifdef CONFIG_SYS_DDR_RAW_TIMING
+	dram_size = fsl_ddr_sdram_size();
 #endif
+#endif
+
+	gd->ram_size = dram_size;
 
 	return 0;
 }
