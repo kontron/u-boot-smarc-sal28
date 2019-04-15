@@ -8,23 +8,18 @@
 #include <asm/io.h>
 #include <asm/spl.h>
 #include <linux/libfdt.h>
+#include "sl28.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#define PORSR1_RCW_SRC      0x07800000
-#define PORSR1_RCW_SRC_SDHC 0x04000000
-#define PORSR1_RCW_SRC_MMC  0x04800000
-#define PORSR1_RCW_SRC_I2C  0x05000000
-#define PORSR1_RCW_SRC_FSPI 0x07800000
-
 void board_boot_order(u32 *spl_boot_list)
 {
-	u32 porsr1 = in_le32(DCFG_BASE + DCFG_PORSR1);
+	u32 rcw_src = board_boot_source();
 	unsigned int payload_offs = 0;
 
-	debug("board_boot_order() porsr1=%x\n", porsr1);
+	debug("%s: rcw_src=%x\n", __func__, rcw_src);
 
-	switch (porsr1 & PORSR1_RCW_SRC) {
+	switch (rcw_src) {
 	case PORSR1_RCW_SRC_SDHC:
 		puts("SDHC boot\n");
 		spl_boot_list[0] = BOOT_DEVICE_MMC1;
@@ -39,7 +34,7 @@ void board_boot_order(u32 *spl_boot_list)
 		spl_boot_list[0] = BOOT_DEVICE_SPI;
 		break;
 	default:
-		panic("unknown bootsource (%x)\n", porsr1);
+		panic("unknown bootsource (%x)\n", rcw_src);
 		break;
 	}
 
