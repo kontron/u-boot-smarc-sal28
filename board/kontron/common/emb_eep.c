@@ -19,22 +19,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
  */
-#define DEBUG 1
+
 #include <common.h>
 #include <i2c.h>
 #include "emb_eep.h"
 
-#ifdef CONFIG_EMB_EEP_I2C
+#ifdef CONFIG_EMB_EEP_I2C_EEPROM
 
 #ifdef CONFIG_KEX_EEP_BOOTCOUNTER
 #define CONFIG_EMB_EEP_WRITE
 #endif
 
-#ifndef D_ETHADDR
-#define D_ETHADDR "02:00:00:01:00:20"
-#endif
-
-int EMB_EEP_I2C_EEPROM_BUS_NUM_1 = 0;
+int EMB_EEP_I2C_EEPROM_BUS_NUM_1;
 int EMB_EEP_I2C_EEPROM_BUS_NUM_2;
 
 static int emb_eep_init (emb_eep_info *vpdi);
@@ -42,34 +38,24 @@ static char *emb_eep_find_mac_in_dmi_164 (emb_eep_info *vpdi, int string_num);
 static char *emb_eep_find_entry_in_dmi (int eeprom_num, int dmi_num, int entry_num);
 
 static char vpd_header[0x10];
-static char vpd_block[CONFIG_EMB_EEP_I2C_SIZE];
+static char vpd_block[CONFIG_EMB_EEP_I2C_EEPROM_SIZE];
 static emb_eep_info vpdinfo;
 
 static int i2c_read_emb (emb_eep_info *vpdi, int offset, unsigned char *buffer, int len)
 {
-	switch (vpdi->eeprom_num) {
-#ifdef CONFIG_EMB_EEP_I2C_ADDR_1
-		case 1:
-			i2c_read (CONFIG_EMB_EEP_I2C_ADDR_1,
-				CONFIG_EMB_EEP_I2C_OFFSET_1 + offset,
-				CONFIG_EMB_EEP_I2C_ADDR_LEN_1,
-				(unsigned char *) &buffer[0],
-				len);
-			break;
+#ifdef CONFIG_DM_I2C
+	dm_i2c_read(vpdi->i2c_dev,
+	            vpdi->eeprom_offset + offset,
+	            (unsigned char *) &buffer[0],
+	            len);
+#else
+	i2c_read (vpdi->eeprom_addr,
+	          vpdi->eeprom_offset + offset,
+	          vpdi->eeprom_addrlen,
+	          (unsigned char *) &buffer[0],
+	          len);
 #endif
-#ifdef CONFIG_EMB_EEP_I2C_ADDR_2
-		case 2:
-			i2c_read (CONFIG_EMB_EEP_I2C_ADDR_2,
-				CONFIG_EMB_EEP_I2C_OFFSET_2 + offset,
-				CONFIG_EMB_EEP_I2C_ADDR_LEN_2,
-				(unsigned char *) &buffer[0],
-				len);
-			break;
-#endif
-		default:
-			printf ("Warning: EEPROM number %d not supported\n",
-			        vpdi->eeprom_num);
-	}
+
 	return 0;
 }
 
@@ -77,18 +63,22 @@ static int i2c_read_emb (emb_eep_info *vpdi, int offset, unsigned char *buffer, 
 static int i2c_write_emb (emb_eep_info *vpdi, int offset, unsigned char *buffer, int len)
 {
 	int ret = 0;
-#ifdef CONFIG_EMB_EEP_I2C_ADDR_1
-	if (vpdi->eeprom_num == 1) {
-		do {
-			len--;
-			ret |= i2c_write(CONFIG_EMB_EEP_I2C_ADDR_1,
-		                         CONFIG_EMB_EEP_I2C_OFFSET_1 + offset + len,
-		                         CONFIG_EMB_EEP_I2C_ADDR_LEN_1,
-		                         buffer+len, 1);
-			udelay(5000);
-		} while (len > 0);
-	}
+	do {
+		len--;
+#ifdef CONFIG_DM_I2C
+		dm_i2c_write(vpdi->i2c_dev,
+		             vpdi->eeprom_offset + offset + len,
+		             buffer + len,
+		             1);
+#else
+		ret |= i2c_write(vpdi->eeprom_addr,
+	                         vpdi->eeprom_offset + offset + len,
+	                         vpdi->eeprom_addrlen,
+	                         buffer+len, 1);
 #endif
+		udelay(5000);
+	} while (len > 0);
+
 	return ret;
 }
 #endif
@@ -391,6 +381,7 @@ static char *emb_eep_find_mac_in_dmi_164 (emb_eep_info *vpdi, int eth_num)
 
 static void emb_eep_default_ethaddr (void)
 {
+#ifndef CONFIG_NET_RANDOM_ETHADDR
 	char *e_ethaddr;
 
 	e_ethaddr = env_get("ethaddr");
@@ -398,6 +389,7 @@ static void emb_eep_default_ethaddr (void)
 		printf ("WARNING: ethaddr not found in environment, using default value\n");
 		env_set  ("ethaddr", D_ETHADDR);
 	}
+#endif
 }
 
 static void emb_eep_import_ethaddr (emb_eep_info *vpdi, const char *eth_x_addr, int num, const char *d_ethaddr)
@@ -424,9 +416,11 @@ static void emb_eep_import_ethaddr (emb_eep_info *vpdi, const char *eth_x_addr, 
 	/* Check if ethaddr already exists in Environment */
 	if (e_ethaddr) {
 		if (!strcmp(d_ethaddr, e_ethaddr)) {
+#ifndef CONFIG_NET_RANDOM_ETHADDR
 			printf ("Embedded EEPROM: Overwrite default %s to %s\n",
 			        eth_x_addr, v_ethaddr);
 			env_set((char*)eth_x_addr, v_ethaddr);
+#endif
 			return;
 		}
 		else {
@@ -466,13 +460,46 @@ static int emb_eep_check_header (emb_eep_info *vpdi)
 static int emb_eep_init (emb_eep_info *vpdi)
 {
 
-	debug ("Initialize vpd_init, vpdi = 0x%x\n", (int)vpdi);
+	debug ("Initialize vpd_init, vpdi = 0x%p\n", (void *)vpdi);
+
+	switch (vpdi->eeprom_num) {
+#ifdef CONFIG_EMB_EEP_I2C_EEPROM_ADDR_1
+	case 1:
+		vpdi->eeprom_busnum = EMB_EEP_I2C_EEPROM_BUS_NUM_1;
+		vpdi->eeprom_addr = CONFIG_EMB_EEP_I2C_EEPROM_ADDR_1;
+		vpdi->eeprom_addrlen = CONFIG_EMB_EEP_I2C_EEPROM_ADDR_LEN_1;
+		vpdi->eeprom_offset = CONFIG_EMB_EEP_I2C_EEPROM_OFFSET_1;
+		break;
+#endif
+#ifdef CONFIG_EMB_EEP_I2C_EEPROM_ADDR_2
+	case 2:
+		vpdi->eeprom_busnum = EMB_EEP_I2C_EEPROM_BUS_NUM_2;
+		vpdi->eeprom_addr = CONFIG_EMB_EEP_I2C_EEPROM_ADDR_2;
+		vpdi->eeprom_addrlen = CONFIG_EMB_EEP_I2C_EEPROM_ADDR_LEN_2;
+		vpdi->eeprom_offset = CONFIG_EMB_EEP_I2C_EEPROM_OFFSET_2;
+		break;
+#endif
+	default:
+		printf("Warning: EEPROM number %d not supported\n",
+		       vpdi->eeprom_num);
+		return -1;
+	}
 
 	/* read 6 bytes first */
-	if (vpdi->eeprom_num == 2)
-		i2c_set_bus_num(EMB_EEP_I2C_EEPROM_BUS_NUM_2);
-	else
-		i2c_set_bus_num(EMB_EEP_I2C_EEPROM_BUS_NUM_1);
+#ifdef CONFIG_DM_I2C
+	int ret;
+	ret = i2c_get_chip_for_busnum(vpdi->eeprom_busnum,
+	                              vpdi->eeprom_addr,
+	                              vpdi->eeprom_addrlen,
+	                              &(vpdi->i2c_dev));
+	if (ret) {
+		printf("EEPROM 0x%02x not foundon bus %d\n",
+		       vpdi->eeprom_addr, vpdi->eeprom_busnum);
+		return -1;
+	}
+#else
+	i2c_set_bus_num(vpdi->eeprom_busnum);
+#endif
 
 	i2c_read_emb(vpdi, 0, (unsigned char *)&vpdi->header[0], 6);
 
@@ -482,7 +509,7 @@ static int emb_eep_init (emb_eep_info *vpdi)
 	}
 
 	vpdi->max_size = 256 << (vpdi->header[5] & 0x7);
-	if ( vpdi->max_size > CONFIG_EMB_EEP_I2C_SIZE) {
+	if ( vpdi->max_size > CONFIG_EMB_EEP_I2C_EEPROM_SIZE) {
 		printf ("Embedded EEPROM contents too large\n");
 		return -1;
 	}
@@ -497,6 +524,7 @@ void emb_eep_init_r(int eeprom_num_serial, int eeprom_num_eth, int num_of_macs)
 {
 	char *val;
 	emb_eep_info *vpdi;
+	int macnum = 1;
 
 	vpdi = &vpdinfo;
 	vpdi->block = &vpd_block[0];
@@ -523,26 +551,28 @@ void emb_eep_init_r(int eeprom_num_serial, int eeprom_num_eth, int num_of_macs)
 	/*
 	 * Import eth addresses to environment
 	 */
-	emb_eep_import_ethaddr (vpdi, "ethaddr", 1, D_ETHADDR);
+#if defined(CONFIG_HAS_ETH0)
+	emb_eep_import_ethaddr (vpdi, "ethaddr", macnum++, D_ETHADDR);
+#endif
 
 #if defined(CONFIG_HAS_ETH1)
 	if (num_of_macs >= 2)
-		emb_eep_import_ethaddr (vpdi, "eth1addr", 2, D_ETH1ADDR);
+		emb_eep_import_ethaddr (vpdi, "eth1addr", macnum++, D_ETH1ADDR);
 #endif
 
 #if defined(CONFIG_HAS_ETH2)
 	if (num_of_macs >= 3)
-		emb_eep_import_ethaddr (vpdi, "eth2addr", 3, D_ETH1ADDR);
+		emb_eep_import_ethaddr (vpdi, "eth2addr", macnum++, D_ETH2ADDR);
 #endif
 
 #if defined(CONFIG_HAS_ETH3)
 	if (num_of_macs >= 4)
-		emb_eep_import_ethaddr (vpdi, "eth3addr", 4, D_ETH1ADDR);
+		emb_eep_import_ethaddr (vpdi, "eth3addr", macnum++, D_ETH3ADDR);
 #endif
 
 #if defined(CONFIG_HAS_ETH4)
 	if (num_of_macs >= 5)
-		emb_eep_import_ethaddr (vpdi, "eth4addr", 5, D_ETH1ADDR);
+		emb_eep_import_ethaddr (vpdi, "eth4addr", macnum++, D_ETH4ADDR);
 #endif
 
 	return;
@@ -588,4 +618,4 @@ int emb_eep_update_bootcounter(int eeprom_num)
 }
 #endif
 
-#endif /* CONFIG_EMB_EEP_I2C */
+#endif /* CONFIG_EMB_EEP_I2C_EEPROM */

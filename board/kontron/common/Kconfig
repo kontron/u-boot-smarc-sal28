@@ -10,7 +10,7 @@ config CMD_KBOARDINFO
 config KBOARDINFO_MODULE
 	bool
 
-config EMB_EEP_I2C
+config EMB_EEP_I2C_EEPROM
 	bool "Embedded I2C EEPROM support"
 	depends on !SPL_BUILD
 	help
@@ -22,29 +22,37 @@ config JAM_STAPL
 	help
 	  This option enables kjtag JAM_STAPL driver
 
-config EMB_EEP_I2C_BUS_NUM_EE1
+config EMB_EEP_I2C_EEPROM_BUS_NUM_EE1
 	int "Embedded EEPROM I2C bus number"
-	depends on EMB_EEP_I2C
+	depends on EMB_EEP_I2C_EEPROM
 	default 1
 
-config EMB_EEP_I2C_ADDR_LEN_1
+config EMB_EEP_I2C_EEPROM_ADDR_LEN_1
 	int "Embedded EEPROM I2C address length"
-	depends on EMB_EEP_I2C
+	depends on EMB_EEP_I2C_EEPROM
 	default 2
 
-config EMB_EEP_I2C_ADDR_1
+config EMB_EEP_I2C_EEPROM_ADDR_1
 	hex "Embedded EEPROM I2C address"
-	depends on EMB_EEP_I2C
+	depends on EMB_EEP_I2C_EEPROM
 	default 0x50
 
-config EMB_EEP_I2C_OFFSET_1
+config EMB_EEP_I2C_EEPROM_OFFSET_1
 	hex "Embedded I2C EEPROM data area offset"
-	depends on EMB_EEP_I2C
+	depends on EMB_EEP_I2C_EEPROM
 	default 0x0
 
-config EMB_EEP_I2C_SIZE
+config EMB_EEP_I2C_EEPROM_SIZE
 	hex "Embedded I2C EEPROM size"
-	depends on EMB_EEP_I2C
+	depends on EMB_EEP_I2C_EEPROM
 	default 0x1000
+
+config KEX_EEP_BOOTCOUNTER
+	bool "KEU EEPROM boot counter support"
+	depends on EMB_EEP_I2C_EEPROM
+	default n
+	help
+	  Increase 32 bit boot counter in EEPROM upon every
+	  module reboot
 
 endmenu
