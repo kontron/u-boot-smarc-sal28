@@ -27,6 +27,11 @@ typedef struct {
 	char		* block;
 	unsigned int 	max_size;
 	int		eeprom_num;
+	int		eeprom_busnum;
+	int		eeprom_addr;    /* EEPROM I2C address */
+	int		eeprom_addrlen;
+	int		eeprom_offset;  /* offset where VPD data starts */
+	struct udevice	*i2c_dev;
 } emb_eep_info;
 
 typedef struct {
@@ -48,6 +53,26 @@ typedef struct {
 
 #define BLOCK_161_BOOTCOUNTER	0x0F	/* offset to SMBIOS block ID byte 0xd0 */
 #define BLOCK_161_RUNNINGTIME	0x17	/* offset to SMBIOS block ID byte 0xd0 */
+
+#ifndef D_ETHADDR
+#define D_ETHADDR "02:00:00:01:00:20"
+#endif
+
+#ifndef D_ETH1ADDR
+#define D_ETH1ADDR "02:00:00:01:00:21"
+#endif
+
+#ifndef D_ETH2ADDR
+#define D_ETH2ADDR "02:00:00:01:00:22"
+#endif
+
+#ifndef D_ETH3ADDR
+#define D_ETH3ADDR "02:00:00:01:00:23"
+#endif
+
+#ifndef D_ETH4ADDR
+#define D_ETH4ADDR "02:00:00:01:00:24"
+#endif
 
 extern void emb_eep_init_r(int eeprom_num_serial, int eeprom_num_eth, int num_of_macs);
 extern char * emb_eep_find_string_in_dmi (int eeprom_num, int dmi_num, int string_num);
