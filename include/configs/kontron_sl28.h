@@ -15,7 +15,9 @@
 #include <asm/arch/config.h>
 #include <asm/arch/soc.h>
 
-/* Link Definitions */
+/******************************************************************************
+ * Link Definitions
+ */
 #define CONFIG_SYS_INIT_SP_ADDR         (CONFIG_SYS_FSL_OCRAM_BASE + 0xfff0)
 
 #define CONFIG_SKIP_LOWLEVEL_INIT
@@ -25,7 +27,7 @@
 #define CONFIG_SYS_MEMTEST_END          0x9fffffff
 #endif
 
-/*
+/******************************************************************************
  * SMP Definitinos
  */
 #define CPU_RELEASE_ADDR                secondary_boot_func
@@ -36,7 +38,9 @@
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN           (CONFIG_ENV_SIZE + 2048 * 1024)
 
-/* Serial Port */
+/******************************************************************************
+ * Serial Port
+ */
 #define CONFIG_CONS_INDEX       1
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_REG_SIZE     1
@@ -45,7 +49,9 @@
 #define CONFIG_BAUDRATE                 115200
 #define CONFIG_SYS_BAUDRATE_TABLE       { 9600, 19200, 38400, 57600, 115200 }
 
-/* ENETC */
+/******************************************************************************
+ * ENETC
+ */
 #ifdef CONFIG_FSL_ENETC
 #define CFG_ENETC_PHYS_ADDR 0x1f0000000ULL
 #define CFG_ENETC_PHYS_SIZE 0x10000000UL
@@ -58,7 +64,9 @@
 /* needed for RGMII phy init */
 #define CONFIG_LAST_STAGE_INIT
 
-/* Miscellaneous configurable options */
+/******************************************************************************
+ * Miscellaneous configurable options
+ */
 #define CONFIG_MISC_INIT_R
 
 #define CONFIG_SYS_LOAD_ADDR    (CONFIG_SYS_DDR_SDRAM_BASE + 0x10000000)
@@ -69,7 +77,10 @@
 #undef CONFIG_EMB_EEP_I2C_EEPROM
 #endif
 
-/* Environment */
+/******************************************************************************
+ * Default Environment Variables
+ */
+
 /* Allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 
@@ -134,7 +145,9 @@
 
 #define CONFIG_SYS_BOOTM_LEN   (64 << 20)      /* Increase max gunzip size */
 
-/*  MMC  */
+/******************************************************************************
+ * MMC
+ */
 #ifdef CONFIG_MMC
 #define CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_MMC_HAS_CAPBLT_VS33
@@ -163,7 +176,9 @@
 #define CONFIG_DDR_CLK_FREQ             100000000 /* 100 MHz base clock */
 #define COUNTER_FREQUENCY_REAL          (CONFIG_SYS_CLK_FREQ/4)
 
-/* DDR */
+/******************************************************************************
+ * DDR
+ */
 #define CONFIG_SYS_DDR_RAW_TIMING
 #define CONFIG_DDR_ECC
 #define CONFIG_ECC_INIT_VIA_DDRCONTROLLER
@@ -179,19 +194,28 @@
 #define CONFIG_SYS_DDR_BLOCK2_BASE      0x2080000000ULL
 #define CONFIG_SYS_FSL_DDR_MAIN_NUM_CTRLS       1
 
-/* FlexSPI */
+/******************************************************************************
+ * FlexSPI
+ */
 #ifdef CONFIG_NXP_FSPI
 #define NXP_FSPI_FLASH_SIZE             SZ_4M
 #define NXP_FSPI_FLASH_NUM              1
 #endif
 
-/* Store environment at top of flash */
+/******************************************************************************
+ * Environment organization
+ */
+
 #define CONFIG_SYS_FLASH_BASE           0x20000000
-#define CONFIG_ENV_OFFSET               0x3f0000
+#define CONFIG_ENV_OFFSET               0x3e0000
 #define CONFIG_ENV_SIZE                 0x2000
 #define CONFIG_ENV_SECT_SIZE            0x10000
 #define CONFIG_ENV_ADDR                 (CONFIG_SYS_FLASH_BASE + \
                                          CONFIG_ENV_OFFSET)
+
+#define CONFIG_SYS_REDUNDAND_ENVIRONMENT
+#define CONFIG_ENV_OFFSET_REDUND        0x3f0000
+#define CONFIG_ENV_SIZE_REDUND          (CONFIG_ENV_SIZE)
 
 #ifdef CONFIG_SPL_BUILD
 #define CONFIG_SYS_MONITOR_BASE CONFIG_SPL_TEXT_BASE
@@ -199,7 +223,9 @@
 #define CONFIG_SYS_MONITOR_BASE CONFIG_SYS_TEXT_BASE
 #endif
 
-/* SATA */
+/******************************************************************************
+ * SATA
+ */
 #define CONFIG_SYS_SCSI_MAX_SCSI_ID             1
 #define CONFIG_SYS_SCSI_MAX_LUN                 1
 #define CONFIG_SYS_SCSI_MAX_DEVICE              (CONFIG_SYS_SCSI_MAX_SCSI_ID * \
