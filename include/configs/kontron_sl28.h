@@ -50,6 +50,9 @@
 #define CFG_ENETC_PHYS_ADDR 0x1f0000000ULL
 #define CFG_ENETC_PHYS_SIZE 0x10000000UL
 #define CONFIG_FSL_MEMAC
+
+#define CONFIG_HAS_ETH1
+#define CONFIG_HAS_ETH2
 #endif
 
 /* needed for RGMII phy init */
@@ -59,6 +62,12 @@
 #define CONFIG_MISC_INIT_R
 
 #define CONFIG_SYS_LOAD_ADDR    (CONFIG_SYS_DDR_SDRAM_BASE + 0x10000000)
+
+#ifdef CONFIG_SPL_BUILD
+#undef CONFIG_CMD_KBOARDINFO
+#undef CONFIG_KBOARDINFO_MODULE
+#undef CONFIG_EMB_EEP_I2C_EEPROM
+#endif
 
 /* Environment */
 /* Allow to overwrite serial and ethaddr */
