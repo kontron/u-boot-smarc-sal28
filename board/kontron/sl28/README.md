@@ -73,13 +73,14 @@ loaded from SPI flash offset `3F_0000h`.
 | `00_0000h` | `00_FFFFh` |   64 kiB | x  | reset configuration word        |
 | `01_0000h` | `0F_FFFFh` |  960 kiB | x  | failsafe bootloader             |
 | `10_0000h` | `13_FFFFh` |  256 kiB | x  | failsafe DP controller firmware |
-| `14_0000h` | `1E_FFFFh` |  704 kiB | x  | failsafe PPA image              |
-| `1F_0000h` | `1F_FFFFh` |   64 kiB | x  | *reserved*                      |
+| `14_0000h` | `1D_FFFFh` |  640 kiB | x  | failsafe PPA image              |
+| `1E_0000h` | `1F_FFFFh` |  128 kiB | x  | *reserved*                      |
 | `20_0000h` | `20_FFFFh` |   64 kiB |    | *reserved*                      |
 | `21_0000h` | `2F_FFFFh` |  960 kiB |    | bootloader                      |
 | `30_0000h` | `33_FFFFh` |  256 kiB |    | DP controller firmware          |
-| `34_0000h` | `3E_FFFFh` |  704 kiB |    | PPA image                       |
-| `3F_0000h` | `3F_FFFFh` |   64 kiB |    | bootloader environment          |
+| `34_0000h` | `3D_FFFFh` |  640 kiB |    | PPA image                       |
+| `3E_0000h` | `3E_FFFFh' |   64 kiB |    | bootloader envrionment          |
+| `3F_0000h` | `3F_FFFFh` |   64 kiB |    | bootloader redund. environment  |
 
 The flash map is divided into two sections. Both sections have the same
 layout. One is factory write protected while the other is inteded to be
