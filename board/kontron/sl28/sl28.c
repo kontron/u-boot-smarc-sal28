@@ -30,6 +30,8 @@
 #include "sl28.h"
 #include "../common/emb_eep.h"
 
+extern int EMB_EEP_I2C_EEPROM_BUS_NUM_1;
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #define GPINFO_HW_VARIANT_MASK 0xff
@@ -199,10 +201,16 @@ int checkboard(void)
 
 int fsl_board_late_init(void)
 {
+#ifndef CONFIG_SPL_BUILD
 	char buf[32];
 
 	env_set_ulong("variant", sl28_variant());
 	env_set("rcw_filename", sl28_rcw_filename(buf, sizeof(buf)));
+
+#if defined(CONFIG_KEX_EEP_BOOTCOUNTER)
+	emb_eep_update_bootcounter(1);
+#endif
+#endif
 
 	return 0;
 }
@@ -380,7 +388,7 @@ static void setup_sw_sgmii(int n)
 
 void setup_qsgmii(void)
 {
-	struct mii_dev bus = {0}, *ext_bus;
+	struct mii_dev bus = {0};
 	u16 value;
 	int i, to;
 
@@ -408,6 +416,7 @@ void setup_qsgmii(void)
 	char *mdio_name;
 	mdio_name = "netc_mdio";
 	phy_addr = 0x10;
+	struct mii_dev *ext_bus;
 
 	/* set up VSC PHY - this works on RDB only for now*/
 	ext_bus = miiphy_get_dev_by_name(mdio_name);
@@ -465,8 +474,9 @@ void setup_qsgmii(void)
 int misc_init_r(void)
 {
 	debug("%s()\n", __func__);
-#ifdef CONFIG_EMB_EEP_I2C
-	/* EMB_EEP_I2C_BUS_NUM_1 = CONFIG_EMB_EEP_I2C_BUS_NUM_EE1; */
+
+#ifdef CONFIG_EMB_EEP_I2C_EEPROM
+	EMB_EEP_I2C_EEPROM_BUS_NUM_1 = CONFIG_EMB_EEP_I2C_EEPROM_BUS_NUM_EE1;
 	emb_eep_init_r(1, 1, 4);
 #endif
 
@@ -596,4 +606,18 @@ char *getMacAddress (int eeprom_num, int eth_num)
         else
                 return "na";
 }
+
+uint64_t getBootCounter (int eeprom_num)
+{
+	uint64_t bc;
+	char *tmp;
+
+	tmp = emb_eep_find_string_in_dmi(eeprom_num, 161, 1);
+	if (tmp != NULL) {
+		memcpy (&bc, tmp, sizeof(uint64_t));
+		return (be64_to_cpu(bc));
+	} else
+		return (-1ULL);
+}
+
 #endif
