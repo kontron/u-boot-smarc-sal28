@@ -134,11 +134,12 @@
                 "&& sf probe 0 && sf update $fileaddr 0x300000 $filesize\0" \
         "update_all=setenv autoload no; dhcp && run set_tftp_spi_flash_img_uri && tftp $uri " \
                 "&& sf probe 0 && sf update $fileaddr 0 $filesize\0" \
-        "update=run updUsb || run updFal\0" \
+        "update=setenv sl28_variant v${variant}; run updUsb || run updSd || run updNet || run updFal\0" \
         "updFal=echo update failed\0" \
-        "updUsb=usb start && usb dev 0 && load usb 0:1 $loadaddr $updfile && setenv loader load usb 0:1 && source $loadaddr && true\0" \
-        "updNet=setenv autoload no && dhcp; if tftp $loadaddr ${updserver}${updfile}; then setenv loader tftp; source $loadaddr; else run updFal; fi\0" \
-        "updfile=update_sl28/update\0" \
+        "updUsb=usb start && usb dev 0 && load usb 0:1 ${loadaddr} ${updfile} && source ${loadaddr}:install && true\0" \
+        "updSd=mmc dev 0 && load mmc 0:1 ${loadaddr} ${updfile} && source ${loadaddr}:install && true\0" \
+        "updNet=setenv autoload no && dhcp; if tftp ${loadaddr} ${updserver}${updfile}; then source ${loadaddr}:install; else run updFal; fi\0" \
+        "updfile=update_sl28.itb\0" \
 		ENV_MEM_LAYOUT_SETTINGS \
 		BOOTENV
 
