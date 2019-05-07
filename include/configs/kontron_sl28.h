@@ -92,6 +92,7 @@
 	"fdt_addr_r=0x83000000\0" \
 	"ramdisk_addr_r=0x83100000\0"
 
+#ifdef CONFIG_KONTRON_TEST_EXTENSIONS
 #define BOOTENV_DEV_DAILY(devtypeu, devtypel, instance) \
 	"boot_script_daily=10.0.1.36:s/sl28\0" \
 	"bootcmd_daily=" \
@@ -103,6 +104,25 @@
 		"\0"
 #define BOOTENV_DEV_NAME_DAILY(devtypeu, devtypel, instance) \
 	"daily "
+#define ENV_KONTRON_TEST_EXTENSIONS \
+	"update_rcw=setenv autoload no; dhcp " \
+		"&& tftp 10.0.1.36:b/sl28/rcw/$rcw_filename " \
+		"&& i2c write $fileaddr 50 0.2 $filesize\0" \
+	"update_uboot=setenv autoload no; dhcp && " \
+		"tftp 10.0.1.36:b/sl28/u-boot " \
+		"&& sf probe 0 && sf update $fileaddr 0x210000 $filesize\0" \
+	"update_dp_firmware=setenv autoload no; dhcp " \
+		"&& tftp 10.0.1.36:b/sl28/dp-firmware " \
+		"&& sf probe 0 && sf update $fileaddr 0x300000 $filesize\0" \
+	"update_all=setenv autoload no; dhcp && " \
+		"tftp 10.0.1.36:b/sl28/spi-flash.img " \
+		"&& sf probe 0 && sf update $fileaddr 0 $filesize\0"
+#else
+#define BOOTENV_DEV_DAILY(devtypeu, devtypel, instance)
+#define BOOTENV_DEV_NAME_DAILY(devtypeu, devtypel, instance)
+#define ENV_KONTRON_TEST_EXTENSIONS
+#endif
+
 
 #ifndef CONFIG_SPL_BUILD
 #define BOOT_TARGET_DEVICES(func) \
@@ -116,32 +136,21 @@
 #endif
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
-		"fdt_high=0xffffffffffffffff\0" \
-		"initrd_high=0xffffffffffffffff\0" \
-		"hdp_fw_addr=0x20100000\0" \
-		"hdpload=hdp load ${hdp_fw_addr} 0x2000\0" \
-		"env_addr=0x203e0004\0" \
-		"envload=env import -d -b ${env_addr}\0" \
-		"set_tftp_rcw_uri=setenv uri 10.0.1.36:b/sl28/rcw/$rcw_filename\0" \
-		"set_tftp_uboot_uri=setenv uri 10.0.1.36:b/sl28/u-boot\0" \
-		"set_tftp_dp_firmware_uri=setenv uri 10.0.1.36:b/sl28/dp-firmware\0" \
-		"set_tftp_spi_flash_img_uri=setenv uri 10.0.1.36:b/sl28/spi-flash.img\0" \
-        "update_rcw=setenv autoload no; dhcp && run set_tftp_rcw_uri && tftp $uri " \
-                "&& i2c write $fileaddr 50 0.2 $filesize\0" \
-        "update_uboot=setenv autoload no; dhcp && run set_tftp_uboot_uri && tftp $uri " \
-                "&& sf probe 0 && sf update $fileaddr 0x210000 $filesize\0" \
-        "update_dp_firmware=setenv autoload no; dhcp && run set_tftp_dp_firmware_uri && tftp $uri " \
-                "&& sf probe 0 && sf update $fileaddr 0x300000 $filesize\0" \
-        "update_all=setenv autoload no; dhcp && run set_tftp_spi_flash_img_uri && tftp $uri " \
-                "&& sf probe 0 && sf update $fileaddr 0 $filesize\0" \
-        "update=setenv sl28_variant v${variant}; run updUsb || run updSd || run updNet || run updFal\0" \
-        "updFal=echo update failed\0" \
-        "updUsb=usb start && usb dev 0 && load usb 0:1 ${loadaddr} ${updfile} && source ${loadaddr}:install && true\0" \
-        "updSd=mmc dev 0 && load mmc 0:1 ${loadaddr} ${updfile} && source ${loadaddr}:install && true\0" \
-        "updNet=setenv autoload no && dhcp; if tftp ${loadaddr} ${updserver}${updfile}; then source ${loadaddr}:install; else run updFal; fi\0" \
-        "updfile=update_sl28.itb\0" \
-		ENV_MEM_LAYOUT_SETTINGS \
-		BOOTENV
+	"fdt_high=0xffffffffffffffff\0" \
+	"initrd_high=0xffffffffffffffff\0" \
+	"hdp_fw_addr=0x20100000\0" \
+	"hdpload=hdp load ${hdp_fw_addr} 0x2000\0" \
+	"env_addr=0x203e0004\0" \
+	"envload=env import -d -b ${env_addr}\0" \
+	"update=setenv sl28_variant v${variant}; run updUsb || run updSd || run updNet || run updFal\0" \
+	"updFal=echo update failed\0" \
+	"updUsb=usb start && usb dev 0 && load usb 0:1 ${loadaddr} ${updfile} && source ${loadaddr}:install && true\0" \
+	"updSd=mmc dev 0 && load mmc 0:1 ${loadaddr} ${updfile} && source ${loadaddr}:install && true\0" \
+	"updNet=setenv autoload no && dhcp; if tftp ${loadaddr} ${updserver}${updfile}; then source ${loadaddr}:install; else run updFal; fi\0" \
+	"updfile=update_sl28.itb\0" \
+	ENV_MEM_LAYOUT_SETTINGS \
+	ENV_KONTRON_TEST_EXTENSIONS \
+	BOOTENV
 
 /* Monitor Command Prompt */
 #define CONFIG_SYS_CBSIZE               512     /* Console I/O Buffer Size */
