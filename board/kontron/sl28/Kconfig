@@ -15,6 +15,13 @@ config SYS_CONFIG_NAME
 config SYS_TEXT_BASE
 	default 0x96000000
 
+config KONTRON_TEST_EXTENSIONS
+	bool "Kontron Test Extensions"
+	default n
+	help
+	  This activates environment settings to be used inside Kontrons test
+	  lab.
+
 if FSL_LS_PPA
 config SYS_LS_PPA_FW_ADDR
 	hex "PPA Firmware Addr"
