@@ -93,6 +93,7 @@
 	"ramdisk_addr_r=0x83100000\0"
 
 #ifdef CONFIG_KONTRON_TEST_EXTENSIONS
+#define ENV_KONTRON_UPDATE_EXTENSIONS
 #define BOOTENV_DEV_DAILY(devtypeu, devtypel, instance) \
 	"boot_script_daily=10.0.1.36:s/sl28\0" \
 	"bootcmd_daily=" \
@@ -121,6 +122,21 @@
 #define BOOTENV_DEV_DAILY(devtypeu, devtypel, instance)
 #define BOOTENV_DEV_NAME_DAILY(devtypeu, devtypel, instance)
 #define ENV_KONTRON_TEST_EXTENSIONS
+#define ENV_KONTRON_UPDATE_EXTENSIONS \
+	"update_variant=setenv sl28_variant v${variant}; run update\0" \
+	"update_rcw=setenv upd_parts rcw-${variant}; run update\0" \
+	"update_uboot=setenv upd_parts u-boot; run update\0" \
+	"update_dp_firmware=setenv upd_parts dp-firmware; run update\0" \
+	"update_all=setenv upd_parts spi-flash; run update\0" \
+	"update=run updUsb || run updSd || run updNet || run updFal\0" \
+	"updFal=echo update failed\0" \
+	"updUsb=usb start && usb dev 0 && load usb 0:1 ${loadaddr} ${updfile} " \
+		"&& source ${loadaddr}:install && true\0" \
+	"updSd=mmc dev 0 && load mmc 0:1 ${loadaddr} ${updfile} && "\
+		"source ${loadaddr}:install && true\0" \
+	"updNet=setenv autoload no && dhcp; if tftp ${loadaddr} ${updserver}${updfile}; " \
+		"then source ${loadaddr}:install; else run updFal; fi\0" \
+	"updfile=update_sl28.itb\0"
 #endif
 
 
@@ -142,14 +158,9 @@
 	"hdpload=hdp load ${hdp_fw_addr} 0x2000\0" \
 	"env_addr=0x203e0004\0" \
 	"envload=env import -d -b ${env_addr}\0" \
-	"update=setenv sl28_variant v${variant}; run updUsb || run updSd || run updNet || run updFal\0" \
-	"updFal=echo update failed\0" \
-	"updUsb=usb start && usb dev 0 && load usb 0:1 ${loadaddr} ${updfile} && source ${loadaddr}:install && true\0" \
-	"updSd=mmc dev 0 && load mmc 0:1 ${loadaddr} ${updfile} && source ${loadaddr}:install && true\0" \
-	"updNet=setenv autoload no && dhcp; if tftp ${loadaddr} ${updserver}${updfile}; then source ${loadaddr}:install; else run updFal; fi\0" \
-	"updfile=update_sl28.itb\0" \
-	ENV_MEM_LAYOUT_SETTINGS \
+	ENV_KONTRON_UPDATE_EXTENSIONS \
 	ENV_KONTRON_TEST_EXTENSIONS \
+	ENV_MEM_LAYOUT_SETTINGS \
 	BOOTENV
 
 /* Monitor Command Prompt */
