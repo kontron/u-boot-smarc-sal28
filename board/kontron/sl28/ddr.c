@@ -189,14 +189,16 @@ int fsl_ddr_get_dimm_params(dimm_params_t *pdimm,
                 ddr_raw_timing.rank_density = 0x20000000;
                 ddr_raw_timing.mirrored_dimm = 0;
 		break;
+	case GPPORCR1_MEM_8GB_CS0_1_2_3:
+                ddr_raw_timing.n_ranks = 4;
+		gd->ram_size = 0x200000000ULL;
+		break;
 	case GPPORCR1_MEM_4GB_CS0_2:
 		gd->ram_size = 0x100000000ULL;
 		/* fallthrough for now */
-	case GPPORCR1_MEM_8GB_CS0_1_2_3:
-		gd->ram_size = 0x200000000ULL;
-		/* fallthrough for now */
 	default:
-		panic("Unsupported memory configuration (%08x)\n", gpporcr1);
+		panic("Unsupported memory configuration (%08x)\n",
+		       gpporcr1 & GPPORCR1_MEM_MASK);
 		break;
 	}
 
@@ -293,7 +295,8 @@ int fsl_initdram(void)
 		dram_size = 0x200000000ULL;
 		/* fallthrough for now */
 	default:
-		panic("Unsupported memory configuration (%08x)\n", gpporcr1);
+		panic("Unsupported memory configuration (%08x)\n",
+		       gpporcr1 & GPPORCR1_MEM_MASK);
 		break;
 	}
 #endif
