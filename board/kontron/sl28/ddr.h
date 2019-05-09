@@ -40,6 +40,8 @@ static const struct board_specific_parameters udimm0[] = {
 	{      2, 1350,    0,    8,      8, 0x0708080a, 0x0a0b0c09, 0x1f,     8, 0},
 	{      2, 1666,    2,   10,      7, 0x060a0900, 0x0000000b, 0x1f,     8, 0},
 	{      2, 1666,    0,   10,      7, 0x060a0900, 0x0000000b, 0x1f,     8, 0},
+	{      4, 1350,    0,    8,      8, 0x0708080a, 0x0a0b0c09, 0x1f,     8, 0},
+	{      4, 1666,    0,   10,      7, 0x060a0900, 0x0000000b, 0x1f,     8, 0},
 #else
 #error DDR type not defined
 #endif
