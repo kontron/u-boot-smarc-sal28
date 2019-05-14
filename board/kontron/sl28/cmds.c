@@ -11,7 +11,6 @@
 
 #define CPLD_I2C_ADDR 0x4a
 #define REG_UFM_CTRL 0x02
-#define   UFM_CTRL_ACLK    BIT(0)
 #define   UFM_CTRL_DCLK    BIT(1)
 #define   UFM_CTRL_DIN     BIT(2)
 #define   UFM_CTRL_PROGRAM BIT(3)
@@ -30,12 +29,12 @@ static int ufm_shift_data(struct udevice *dev, u16 data_in, u16 *data_out)
 	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, 0);
 	if (ret < 0)
 		return ret;
-	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_ACLK | UFM_CTRL_DCLK);
+	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_DCLK);
 	if (ret < 0)
 		return ret;
 
 	/* assert drshift */
-	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_ACLK | UFM_CTRL_DSHIFT
+	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_DSHIFT
 			| UFM_CTRL_DCLK);
 	if (ret < 0)
 		return ret;
@@ -44,7 +43,7 @@ static int ufm_shift_data(struct udevice *dev, u16 data_in, u16 *data_out)
 	for (i = 15; i >= 0; i--) {
 		u8 din = (data_in & (1 << i)) ? UFM_CTRL_DIN : 0;
 
-		ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_ACLK | UFM_CTRL_DSHIFT
+		ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_DSHIFT
 				| din);
 		if (ret < 0)
 			return ret;
@@ -55,14 +54,14 @@ static int ufm_shift_data(struct udevice *dev, u16 data_in, u16 *data_out)
 			if (ret & UFM_CTRL_DOUT)
 				data |= (1 << i);
 		}
-		ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_ACLK | UFM_CTRL_DSHIFT
+		ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_DSHIFT
 				| UFM_CTRL_DCLK | din);
 		if (ret < 0)
 			return ret;
 	}
 
 	/* deassert drshift */
-	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_ACLK | UFM_CTRL_DCLK);
+	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_DCLK);
 	if (ret < 0)
 		return ret;
 
@@ -77,11 +76,11 @@ static int ufm_erase(struct udevice *dev)
 	int ret;
 
 	/* erase, tEPMX is 500ms */
-	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_ACLK | UFM_CTRL_DCLK
+	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_DCLK
 			| UFM_CTRL_ERASE);
 	if (ret < 0)
 		return ret;
-	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_ACLK | UFM_CTRL_DCLK);
+	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_DCLK);
 	if (ret < 0)
 		return ret;
 	mdelay(500);
@@ -94,11 +93,11 @@ static int ufm_program(struct udevice *dev)
 	int ret;
 
 	/* program, tPPMX is 100us */
-	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_ACLK | UFM_CTRL_DCLK
+	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_DCLK
 			| UFM_CTRL_PROGRAM);
 	if (ret < 0)
 		return ret;
-	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_ACLK | UFM_CTRL_DCLK);
+	ret = dm_i2c_reg_write(dev, REG_UFM_CTRL, UFM_CTRL_DCLK);
 	if (ret < 0)
 		return ret;
 	udelay(100);
