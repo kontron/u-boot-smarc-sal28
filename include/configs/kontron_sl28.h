@@ -108,15 +108,16 @@
 #define ENV_KONTRON_TEST_EXTENSIONS \
 	"update_rcw=setenv autoload no; dhcp " \
 		"&& tftp 10.0.1.36:b/sl28/rcw/$rcw_filename " \
-		"&& i2c write $fileaddr 50 0.2 $filesize\0" \
+		"&& i2c write $fileaddr 50 0.2 $filesize " \
+		"&& sf probe 0 && sf update $fileaddr 0 $filesize\0" \
 	"update_uboot=setenv autoload no; dhcp && " \
-		"tftp 10.0.1.36:b/sl28/u-boot " \
+		"tftp 10.0.1.36:b/sl28/latest/u-boot " \
 		"&& sf probe 0 && sf update $fileaddr 0x210000 $filesize\0" \
 	"update_dp_firmware=setenv autoload no; dhcp " \
-		"&& tftp 10.0.1.36:b/sl28/dp-firmware " \
+		"&& tftp 10.0.1.36:b/sl28/latest/dp-firmware " \
 		"&& sf probe 0 && sf update $fileaddr 0x300000 $filesize\0" \
 	"update_all=setenv autoload no; dhcp && " \
-		"tftp 10.0.1.36:b/sl28/spi-flash.img " \
+		"tftp 10.0.1.36:b/sl28/latest/spi-flash.img " \
 		"&& sf probe 0 && sf update $fileaddr 0 $filesize\0"
 #else
 #define BOOTENV_DEV_DAILY(devtypeu, devtypel, instance)
