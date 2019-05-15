@@ -12,6 +12,7 @@
 #include <fsl_ifc.h>
 #include <i2c.h>
 #include <fsl_csu.h>
+#include <debug_uart.h>
 #include <asm/arch/fdt.h>
 #include <asm/arch/ppa.h>
 #include <asm/arch/soc.h>
@@ -62,6 +63,9 @@ void board_init_f(ulong dummy)
 	icache_enable();
 	/* Clear global data */
 	memset((void *)gd, 0, sizeof(gd_t));
+#ifdef CONFIG_DEBUG_UART
+	debug_uart_init();
+#endif
 	board_early_init_f();
 	timer_init();
 #ifdef CONFIG_ARCH_LS2080A
