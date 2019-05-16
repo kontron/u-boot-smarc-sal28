@@ -26,7 +26,7 @@ void board_boot_order(u32 *spl_boot_list)
 		break;
 	case PORSR1_RCW_SRC_I2C:
 		puts("SPI boot\n");
-		payload_offs = 0x226000;
+		payload_offs = 0x230000;
 		spl_boot_list[0] = BOOT_DEVICE_SPI;
 		break;
 	case PORSR1_RCW_SRC_FSPI:
