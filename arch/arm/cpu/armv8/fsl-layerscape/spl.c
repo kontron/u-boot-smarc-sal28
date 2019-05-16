@@ -66,12 +66,14 @@ void board_init_f(ulong dummy)
 #ifdef CONFIG_DEBUG_UART
 	debug_uart_init();
 #endif
+
+	get_clocks();
+	spl_early_init();
 	board_early_init_f();
 	timer_init();
 #ifdef CONFIG_ARCH_LS2080A
 	env_init();
 #endif
-	get_clocks();
 
 	preloader_console_init();
 	spl_set_bd();
