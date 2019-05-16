@@ -31,7 +31,7 @@
 	};
 
 	config {
-		u-boot,spl-payload-offset = <0x26000>;
+		u-boot,spl-payload-offset = <0x30000>;
 		load-environment = <1>;
 	};
 };
