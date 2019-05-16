@@ -38,15 +38,11 @@
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN           (CONFIG_ENV_SIZE + 2048 * 1024)
 
-/******************************************************************************
- * Serial Port
- */
-#define CONFIG_CONS_INDEX       1
-#define CONFIG_SYS_NS16550_SERIAL
-#define CONFIG_SYS_NS16550_REG_SIZE     1
-#define CONFIG_SYS_NS16550_CLK          (get_bus_freq(0) / 2)
+/* Early heap for SPL DM */
+#define CONFIG_MALLOC_F_ADDR            CONFIG_SYS_FSL_OCRAM_BASE
 
-#define CONFIG_BAUDRATE                 115200
+/* Serial Port */
+#define CONFIG_SYS_NS16550_CLK          (get_bus_freq(0) / 2)
 #define CONFIG_SYS_BAUDRATE_TABLE       { 9600, 19200, 38400, 57600, 115200 }
 
 /******************************************************************************

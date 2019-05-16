@@ -8,14 +8,20 @@
 #include <asm/io.h>
 #include "sl28.h"
 
+DECLARE_GLOBAL_DATA_PTR;
+
 int board_early_init_f(void)
 {
 	fsl_lsch3_early_init_f();
 	return 0;
 }
 
+u32 get_lpuart_clk(void)
+{
+	return gd->bus_clk / CONFIG_SYS_FSL_LPUART_CLK_DIV;
+}
+
 int board_boot_source(void)
 {
 	return(in_le32(DCFG_BASE + DCFG_PORSR1) & PORSR1_RCW_SRC);
 }
-

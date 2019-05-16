@@ -16,6 +16,9 @@
 	compatible = "kontron,sl28", "fsl,ls1028a";
 
 	aliases {
+		serial0 = &lpuart1;
+		serial1 = &serial0;
+		serial2 = &serial1;
 		spi0 = &fspi;
 		spi1 = &dspi2;
 		mmc0 = &esdhc0;
@@ -27,14 +30,32 @@
 		rtc0 = &rtc;
 	};
 
+	chosen {
+		stdout-path = &serial0;
+	};
+
 	config {
 		u-boot,spl-payload-offset = <0x30000>;
 		load-environment = <1>;
 	};
 };
 
+&sysclk {
+	u-boot,dm-pre-reloc;
+};
+
 &esdhc0 {
 	u-boot,dm-pre-reloc;
+};
+
+&serial0 {
+	u-boot,dm-pre-reloc;
+	clock-frequency = <200000000>;
+};
+
+&lpuart1 {
+	u-boot,dm-pre-reloc;
+	status = "okay";
 };
 
 &fspi {
