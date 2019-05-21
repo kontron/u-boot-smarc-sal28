@@ -34,6 +34,9 @@ extern int EMB_EEP_I2C_EEPROM_BUS_NUM_1;
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#define CPLD_I2C_ADDR 0x4a
+#define REG_CPLD_VER  0x03
+
 #define GPINFO_HW_VARIANT_MASK 0xff
 #define GPINFO_HAS_EC_SGMII    BIT(8)
 #define GPINFO_HAS_EC_RGMII    BIT(9)
@@ -120,6 +123,22 @@ static bool sl28_has_qsgmii(void)
 	return true;
 }
 
+static int sl28_cpld_version(void)
+{
+	struct udevice *dev;
+	static int version = -1;
+
+	if (version >= 0)
+		return version;
+
+	if (i2c_get_chip_for_busnum(0, CPLD_I2C_ADDR, 1, &dev))
+		return -1;
+
+	version = dm_i2c_reg_read(dev, REG_CPLD_VER);
+
+	return version;
+}
+
 /*
  * Kontron supplies a list of pregenerated RCWs for different use cases.
  * Map the rcw configuration back to the naming scheme.
@@ -160,6 +179,7 @@ static char *sl28_rcw_filename(char *buf, size_t len)
 
 int board_init(void)
 {
+	int cpld_version = sl28_cpld_version();
 #ifdef CONFIG_ENV_IS_NOWHERE
 	gd->env_addr = (ulong)&default_environment[0];
 #endif
@@ -170,6 +190,11 @@ int board_init(void)
 
 	/* run PCI init to kick off ENETC */
 	pci_init();
+
+	if (cpld_version >= 0)
+		printf("CPLD:  v%d\n", cpld_version);
+	else
+		printf("CPLD:  n/a\n");
 
 	return 0;
 }
@@ -201,15 +226,20 @@ int checkboard(void)
 
 int fsl_board_late_init(void)
 {
-#ifndef CONFIG_SPL_BUILD
 	char buf[32];
+	int cpld_version;
 
+	cpld_version = sl28_cpld_version();
+	if (cpld_version >= 0) {
+		env_set_ulong("cpld_version", cpld_version);
+	} else {
+		env_set("cpld_version", NULL);
+	}
 	env_set_ulong("variant", sl28_variant());
 	env_set("rcw_filename", sl28_rcw_filename(buf, sizeof(buf)));
 
 #if defined(CONFIG_KEX_EEP_BOOTCOUNTER)
 	emb_eep_update_bootcounter(1);
-#endif
 #endif
 
 	return 0;
