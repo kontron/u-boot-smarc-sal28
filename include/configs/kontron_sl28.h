@@ -143,6 +143,7 @@
 	func(MMC, mmc, 0) \
 	func(NVME, nvme, 0) \
 	func(USB, usb, 0) \
+	func(PXE, pxe, 0) \
 	func(DAILY, daily, daily)
 #include <config_distro_bootcmd.h>
 #else
