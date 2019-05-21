@@ -18,7 +18,7 @@
 /******************************************************************************
  * Link Definitions
  */
-#define CONFIG_SYS_INIT_SP_ADDR         (CONFIG_SYS_FSL_OCRAM_BASE + 0xfff0)
+#define CONFIG_SYS_INIT_SP_ADDR         (CONFIG_SYS_FSL_OCRAM_BASE + 0xeff0)
 
 #define CONFIG_SKIP_LOWLEVEL_INIT
 
