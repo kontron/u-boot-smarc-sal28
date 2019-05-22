@@ -201,6 +201,22 @@ int checkboard(void)
 	return 0;
 }
 
+void sl28_set_prompt(void)
+{
+	enum boot_source src = sl28_boot_source();
+
+	switch (src) {
+	case BOOT_SOURCE_FSPI:
+		env_set("PS1", "[FAILSAFE] => ");
+		break;
+	case BOOT_SOURCE_SDHC:
+		env_set("PS1", "[SDHC] => ");
+		break;
+	default:
+		env_set("PS1", NULL);
+	}
+}
+
 int fsl_board_late_init(void)
 {
 	char buf[32];
@@ -214,6 +230,8 @@ int fsl_board_late_init(void)
 	}
 	env_set_ulong("variant", sl28_variant());
 	env_set("rcw_filename", sl28_rcw_filename(buf, sizeof(buf)));
+
+	sl28_set_prompt();
 
 #if defined(CONFIG_KEX_EEP_BOOTCOUNTER)
 	emb_eep_update_bootcounter(1);
