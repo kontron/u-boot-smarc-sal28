@@ -23,6 +23,9 @@
 		spi1 = &dspi2;
 		mmc0 = &esdhc0;
 		mmc1 = &esdhc1;
+		eth_p0 = &eth_p0;
+		eth_p1 = &eth_p1;
+		eth_p2 = &eth_p2;
 		ethernet3 = &netc_mdio;
 		i2c0 = &i2c0;
 		i2c1 = &i2c3;
