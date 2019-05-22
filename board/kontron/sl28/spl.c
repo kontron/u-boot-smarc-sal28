@@ -14,27 +14,25 @@ DECLARE_GLOBAL_DATA_PTR;
 
 void board_boot_order(u32 *spl_boot_list)
 {
-	u32 rcw_src = board_boot_source();
+	enum boot_source src = sl28_boot_source();
 	unsigned int payload_offs = 0;
 
-	debug("%s: rcw_src=%x\n", __func__, rcw_src);
-
-	switch (rcw_src) {
-	case PORSR1_RCW_SRC_SDHC:
+	switch (src) {
+	case BOOT_SOURCE_SDHC:
 		puts("SDHC boot\n");
 		spl_boot_list[0] = BOOT_DEVICE_MMC1;
 		break;
-	case PORSR1_RCW_SRC_I2C:
+	case BOOT_SOURCE_I2C:
 		puts("SPI boot\n");
 		payload_offs = 0x230000;
 		spl_boot_list[0] = BOOT_DEVICE_SPI;
 		break;
-	case PORSR1_RCW_SRC_FSPI:
+	case BOOT_SOURCE_FSPI:
 		puts("Failsafe SPI boot\n");
 		spl_boot_list[0] = BOOT_DEVICE_SPI;
 		break;
 	default:
-		panic("unknown bootsource (%x)\n", rcw_src);
+		panic("unexpected bootsource (%d)\n", src);
 		break;
 	}
 
