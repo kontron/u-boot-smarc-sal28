@@ -524,13 +524,13 @@ int board_fix_fdt(void *rw_fdt_blob)
 	bool has_internal_switch = false;
 	int i;
 	int config_node;
-	u32 rcw_src = board_boot_source();
+	enum boot_source src = sl28_boot_source();
 
 	debug("%s\n", __func__);
 
 	fdt_increase_size(rw_fdt_blob, 32);
 
-	if (rcw_src != PORSR1_RCW_SRC_I2C) {
+	if (src != BOOT_SOURCE_I2C) {
 		config_node = fdt_path_offset(rw_fdt_blob, "/config");
 		fdt_setprop_u32(rw_fdt_blob, config_node,
 		                "load-environment", 0);
