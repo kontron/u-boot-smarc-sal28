@@ -150,6 +150,14 @@
 #define BOOTENV
 #endif
 
+#define ENV_KONTRON_LVDS_EXTENSIONS \
+	"lvds_single_lane_vesa_24bpp=i2c dev 0; i2c mw 20 81 00\0" \
+	"lvds_single_lane_jeida_24bpp=i2c dev 0; i2c mw 20 81 10\0" \
+	"lvds_single_lane_18bpp=i2c dev 0; i2c mw 20 81 20\0" \
+	"lvds_dual_lane_vesa_24bpp=i2c dev 0; i2c mw 20 81 0b\0" \
+	"lvds_dual_lane_jeida_24bpp=i2c dev 0; i2c mw 20 81 1b\0" \
+	"lvds_dual_lane_18bpp=i2c dev 0; i2c mw 20 81 2b\0"
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"fdt_high=0xffffffffffffffff\0" \
 	"initrd_high=0xffffffffffffffff\0" \
@@ -157,6 +165,7 @@
 	"hdpload=hdp load ${hdp_fw_addr} 0x2000\0" \
 	"env_addr=0x203e0004\0" \
 	"envload=env import -d -b ${env_addr}\0" \
+	ENV_KONTRON_LVDS_EXTENSIONS \
 	ENV_KONTRON_UPDATE_EXTENSIONS \
 	ENV_KONTRON_TEST_EXTENSIONS \
 	ENV_MEM_LAYOUT_SETTINGS \
