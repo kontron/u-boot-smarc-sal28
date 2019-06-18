@@ -65,6 +65,8 @@
 	u-boot,dm-pre-reloc;
 	bus-num = <0>;
 	status = "okay";
+	num-cs = <2>;
+	fspi-has-second-chip;
 
 	qflash0: w25q32jw@0 {
 		u-boot,dm-pre-reloc;
