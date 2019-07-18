@@ -52,7 +52,7 @@ U_BOOT_CMD(
 	hdp,  CONFIG_SYS_MAXARGS, 1, do_hdp,
 	"load hdmi firmware ",
 	"[<command>] ...\n"
-	"hdpload [address] [<offset>]\n"
+	"hdp load [address] [<offset>]\n"
 	"        address - address where the binary image starts\n"
 	"        <offset> - IRAM offset in the binary image (8192 default)\n"
 	);
