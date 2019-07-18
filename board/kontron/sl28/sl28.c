@@ -15,6 +15,7 @@
 #include <environment.h>
 #include <asm/arch-fsl-layerscape/soc.h>
 #include <i2c.h>
+#include <wdt.h>
 #include <asm/arch/soc.h>
 #ifdef CONFIG_FSL_LS_PPA
 #include <asm/arch/ppa.h>
@@ -154,6 +155,16 @@ static char *sl28_rcw_filename(char *buf, size_t len)
 	return buf;
 }
 
+static void sl28_stop_recovery_watchdog(void)
+{
+	int ret;
+	struct udevice *dev;
+
+	ret = uclass_get_device_by_seq(UCLASS_WDT, 0, &dev);
+	if (!ret)
+		wdt_stop(dev);
+}
+
 int board_init(void)
 {
 	int cpld_version = sl28_cpld_version();
@@ -239,6 +250,9 @@ int board_late_init(void)
 #if defined(CONFIG_KEX_EEP_BOOTCOUNTER)
 	emb_eep_update_bootcounter(1);
 #endif
+
+	/* keep this at the lastest point in time */
+	sl28_stop_recovery_watchdog();
 
 	return 0;
 }
