@@ -111,6 +111,14 @@ config XILINX_TB_WATCHDOG
 	   Select this to enable Xilinx Axi watchdog timer, which can be found on some
 	   Xilinx Microblaze Platforms.
 
+config WDT_SL28CPLD
+	bool "SL28 CPLD watchdog timer support"
+	depends on WDT
+	help
+	   Select this to enable watchdog timer, which can be found on the CPLD of
+	   Kontron's SMARC-sAL28 board. The timer can be used to control the watchdog
+	   timeout line of the SMARC connector, as well as to reset the board.
+
 config WATCHDOG_RESET_DISABLE
 	bool "Disable reset watchdog"
 	help

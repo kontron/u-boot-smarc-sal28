@@ -25,3 +25,4 @@ obj-$(CONFIG_BCM2835_WDT)       += bcm2835_wdt.o
 obj-$(CONFIG_WDT_ORION) += orion_wdt.o
 obj-$(CONFIG_WDT_CDNS) += cdns_wdt.o
 obj-$(CONFIG_MPC8xx_WATCHDOG) += mpc8xx_wdt.o
+obj-$(CONFIG_WDT_SL28CPLD) += sl28cpld_wdt.o
