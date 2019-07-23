@@ -450,51 +450,6 @@ void setup_qsgmii(void)
 		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
 	}
 
-#if 0
-	int phy_addr;
-	char *mdio_name;
-	mdio_name = "netc_mdio";
-	phy_addr = 0x10;
-	struct mii_dev *ext_bus;
-
-	/* set up VSC PHY - this works on RDB only for now*/
-	ext_bus = miiphy_get_dev_by_name(mdio_name);
-	if (!ext_bus) {
-		PCS_ERR("couldn't find MDIO bus, skipping external PHY config\n");
-		return;
-	}
-
-	for (i = phy_addr; i < phy_addr + 4; i++) {
-		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0010);
-		value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x13);
-		value = (value & 0x3fff) | (1 << 14);
-		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x12, 0x80e0);
-
-		to = 1000;
-
-		do {
-			value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x12);
-			if (!(value & 0x8000))
-				break;
-		} while (--to);
-		if (value & 0x8000)
-			PCS_ERR("PHY[%d] reset timeout\n", i);
-
-
-		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
-		value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x17);
-		value = (value & 0xf8ff);
-		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x17, value);
-
-		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0003);
-		value = ext_bus->read(ext_bus, i, MDIO_DEVAD_NONE, 0x10);
-		value = value | 0x80;
-		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x10, value);
-		ext_bus->write(ext_bus, i, MDIO_DEVAD_NONE, 0x1f, 0x0000);
-		ext_bus->write(ext_bus, 1, MDIO_DEVAD_NONE, 0x00, 0x3300);
-	}
-#endif
-
 	for (i = 0; i < 4; i++) {
 		to = 1000;
 		do {
