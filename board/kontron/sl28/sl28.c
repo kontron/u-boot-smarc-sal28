@@ -125,6 +125,21 @@ static bool sl28_has_qsgmii(void)
 	return true;
 }
 
+static bool sl28_has_internal_switch(void)
+{
+	int i;
+
+	for (i = 0; i < 4; i++)
+		if (sl28_has_sw_sgmii(i))
+			return true;
+
+	if (sl28_has_qsgmii())
+		return true;
+
+	return false;
+}
+
+
 static int sl28_cpld_version(void)
 {
 	struct udevice *dev;
@@ -465,6 +480,65 @@ void setup_qsgmii(void)
 	}
 }
 
+#define L2SW_PORTS		5
+#define L2SW_BASE		0x1fc000000
+#define L2SW_SYS		(L2SW_BASE + 0x010000)
+#define L2SW_ES0		(L2SW_BASE + 0x040000)
+#define L2SW_IS1		(L2SW_BASE + 0x050000)
+#define L2SW_IS2		(L2SW_BASE + 0x060000)
+#define L2SW_GMII(i)		(L2SW_BASE + 0x100000 + (i) * 0x10000)
+#define L2SW_QSYS		(L2SW_BASE + 0x200000)
+#define L2SW_SYS_SYSTEM		(L2SW_SYS + 0x00000E00)
+#define L2SW_SYS_RAM_CTRL	(L2SW_SYS + 0x00000F24)
+
+#define L2SW_ES0_TCAM_CTRL	(L2SW_ES0 + 0x000003C0)
+#define L2SW_IS1_TCAM_CTRL	(L2SW_IS1 + 0x000003C0)
+#define L2SW_IS2_TCAM_CTRL	(L2SW_IS2 + 0x000003C0)
+
+#define L2SW_GMII_CLOCK_CFG(i)	(L2SW_GMII(i) + 0x00000000)
+#define L2SW_GMII_MAC_ENA_CFG(i) (L2SW_GMII(i) + 0x0000001C)
+#define L2SW_GMII_MAC_IFG_CFG(i) (L2SW_GMII(i) + 0x0000001C + 0x14)
+
+#define L2SW_QSYS_SYSTEM	(L2SW_QSYS + 0x0000F460)
+#define L2SW_QSYS_SYSTEM_SW_PORT_MODE(i) (L2SW_QSYS_SYSTEM + 0x20 + (i) * 4)
+
+void setup_internal_switch(void)
+{
+	int to, i;
+
+	debug("setting up L2 switch\n");
+
+	/* core memories */
+	out_le32(L2SW_SYS_RAM_CTRL, 0x2);
+	to = 100;
+	while (--to && (in_le32(L2SW_SYS_RAM_CTRL) & 0x2))
+		udelay(1);
+	if (in_le32(L2SW_SYS_RAM_CTRL) & 0x2) {
+		printf("Timeout while waiting for switch memory initialization\n");
+		return;
+	}
+
+	/* switch core */
+	out_le32(L2SW_SYS_SYSTEM, 0x00000001);
+
+	/* ES0 */
+	out_le32(L2SW_ES0_TCAM_CTRL, 0x00000001);
+	/* IS1 */
+	out_le32(L2SW_IS1_TCAM_CTRL, 0x00000001);
+	/* IS2 */
+	out_le32(L2SW_IS2_TCAM_CTRL, 0x00000001);
+	udelay(20);
+
+	/* initialize the ports of the L2 switch */
+	for (i = 0; i < L2SW_PORTS; i++) {
+		/* MAC Tx and Rx */
+		out_le32(L2SW_GMII_MAC_ENA_CFG(i), 0x00000011);
+		out_le32(L2SW_GMII_CLOCK_CFG(i), 0x00000001);
+		out_le32(L2SW_QSYS_SYSTEM_SW_PORT_MODE(i), 0x00004a00);
+		out_le32(L2SW_GMII_MAC_IFG_CFG(i), 0x00000515);
+	}
+}
+
 int misc_init_r(void)
 {
 	debug("%s()\n", __func__);
@@ -495,6 +569,9 @@ int last_stage_init(void)
 	if (sl28_has_qsgmii())
 		setup_qsgmii();
 
+	if (sl28_has_internal_switch())
+		setup_internal_switch();
+
 	return 0;
 }
 
@@ -508,8 +585,6 @@ void *video_hw_init(void)
 
 int board_fix_fdt(void *rw_fdt_blob)
 {
-	bool has_internal_switch = false;
-	int i;
 	int config_node;
 	enum boot_source src = sl28_boot_source();
 
@@ -533,16 +608,7 @@ int board_fix_fdt(void *rw_fdt_blob)
 		fdt_status_disabled_by_alias(rw_fdt_blob, "eth_p1");
 	}
 
-	for (i = 0; i < 4; i++)
-		if (sl28_has_sw_sgmii(i)) {
-			has_internal_switch = true;
-			break;
-		}
-
-	if (sl28_has_qsgmii())
-		has_internal_switch = true;
-
-	if (has_internal_switch) {
+	if (sl28_has_internal_switch()) {
 		debug("%s: enabling eth_p2\n", __func__);
 		fdt_status_okay_by_alias(rw_fdt_blob, "eth_p2");
 	}
