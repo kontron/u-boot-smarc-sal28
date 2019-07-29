@@ -7,6 +7,7 @@
 #include <common.h>
 #include <malloc.h>
 #include <errno.h>
+#include <fs.h>
 #include <fsl_ddr.h>
 #include <asm/io.h>
 #include <hwconfig.h>
@@ -243,6 +244,38 @@ void sl28_set_prompt(void)
 	}
 }
 
+static void sl28_load_env_script(void)
+{
+	loff_t size;
+	const char *filename = "u-boot-env.txt";
+	int bufsize = 16 * 1024;
+	char *buf = malloc(bufsize);
+
+	/* this is only for production purposes */
+	if (sl28_boot_source() != BOOT_SOURCE_SDHC)
+		goto out;
+
+	if (fs_set_blk_dev("mmc", "0:1", FS_TYPE_ANY))
+		goto out;
+
+	if (!fs_exists(filename))
+		goto out;
+
+	if (fs_set_blk_dev("mmc", "0:1", FS_TYPE_ANY))
+		goto out;
+
+	if (fs_read(filename, (ulong)buf, 0, bufsize, &size))
+		goto out;
+
+	if (!himport_r(&env_htab, buf, size, '\n', H_NOCLEAR, 1, 0, NULL))
+		goto out;
+
+	printf("Imported additional environment from %s\n", filename);
+
+out:
+	free(buf);
+}
+
 int fsl_board_late_init(void)
 {
 	char buf[32];
@@ -258,6 +291,8 @@ int fsl_board_late_init(void)
 	env_set("rcw_filename", sl28_rcw_filename(buf, sizeof(buf)));
 
 	sl28_set_prompt();
+
+	sl28_load_env_script();
 
 #if defined(CONFIG_KEX_EEP_BOOTCOUNTER)
 	emb_eep_update_bootcounter(1);
