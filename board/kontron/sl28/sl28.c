@@ -38,6 +38,9 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define CPLD_I2C_ADDR 0x4a
 #define REG_CPLD_VER  0x03
+#define REG_BRD_CTRL  0x08
+#define BRD_CTRL_BOOT_SEL_MASK 0x70
+#define BRD_CTRL_BOOT_SEL_SHIFT 4
 
 #define GPINFO_HW_VARIANT_MASK 0xff
 #define GPINFO_HAS_EC_SGMII    BIT(8)
@@ -157,6 +160,23 @@ static int sl28_cpld_version(void)
 	return version;
 }
 
+static int sl28_get_boot_selection(void)
+{
+	struct udevice *dev;
+	int sel;
+
+	if (i2c_get_chip_for_busnum(0, CPLD_I2C_ADDR, 1, &dev))
+		return -1;
+
+	sel = dm_i2c_reg_read(dev, REG_BRD_CTRL);
+	sel &= BRD_CTRL_BOOT_SEL_MASK;
+	sel >>= BRD_CTRL_BOOT_SEL_SHIFT;
+
+	debug("%s: boot_sel=%d\n", __func__, sel);
+
+	return sel;
+}
+
 /*
  * Kontron supplies a list of pregenerated RCWs for different use cases.
  * Map the rcw configuration back to the naming scheme.
@@ -228,7 +248,7 @@ int checkboard(void)
 	return 0;
 }
 
-void sl28_set_prompt(void)
+static void sl28_set_prompt(void)
 {
 	enum boot_source src = sl28_boot_source();
 
@@ -241,6 +261,46 @@ void sl28_set_prompt(void)
 		break;
 	default:
 		env_set("PS1", NULL);
+	}
+}
+
+#define BOOT_SEL_SATA     0
+#define BOOT_SEL_SD_CARD  1
+#define BOOT_SEL_FSPI_CS1 2
+#define BOOT_SEL_DSPI_CS0 3
+#define BOOT_SEL_USB      4
+#define BOOT_SEL_PXE      5
+#define BOOT_SEL_EMMC     6
+#define BOOT_SEL_ANY      7
+
+static void sl28_evaluate_bootsel_pins(void)
+{
+	int boot_sel = sl28_get_boot_selection();
+
+	switch (boot_sel) {
+	case BOOT_SEL_SD_CARD:
+		env_set("boot_targets", "mmc0");
+		break;
+	case BOOT_SEL_USB:
+		env_set("boot_targets", "usb0");
+		break;
+	case BOOT_SEL_PXE:
+		env_set("boot_targets", "pxe");
+		break;
+	case BOOT_SEL_EMMC:
+		env_set("boot_targets", "mmc1");
+		break;
+	case BOOT_SEL_ANY:
+		/* do nothing, leave it up to the user */
+		break;
+	case BOOT_SEL_SATA:
+	case BOOT_SEL_FSPI_CS1:
+	case BOOT_SEL_DSPI_CS0:
+	default:
+		printf("Unsupported boot source (boot_sel was %d). Dropping to shell.",
+				boot_sel);
+		env_set("bootcmd", NULL);
+		break;
 	}
 }
 
@@ -292,6 +352,7 @@ int fsl_board_late_init(void)
 
 	sl28_set_prompt();
 
+	sl28_evaluate_bootsel_pins();
 	sl28_load_env_script();
 
 #if defined(CONFIG_KEX_EEP_BOOTCOUNTER)
