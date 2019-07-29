@@ -304,6 +304,21 @@ static void sl28_evaluate_bootsel_pins(void)
 	}
 }
 
+static void sl28_stop_in_failsafe_or_recovery(void)
+{
+	enum boot_source src = sl28_boot_source();
+
+	switch (src) {
+	case BOOT_SOURCE_FSPI:
+	case BOOT_SOURCE_SDHC:
+		env_set("bootcmd", NULL);
+		break;
+	default:
+		/* do nothing */
+		break;
+	}
+}
+
 static void sl28_load_env_script(void)
 {
 	loff_t size;
@@ -352,7 +367,9 @@ int fsl_board_late_init(void)
 
 	sl28_set_prompt();
 
+	/* the following order is important! */
 	sl28_evaluate_bootsel_pins();
+	sl28_stop_in_failsafe_or_recovery();
 	sl28_load_env_script();
 
 #if defined(CONFIG_KEX_EEP_BOOTCOUNTER)
