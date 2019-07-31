@@ -31,9 +31,9 @@
 		i2c1 = &i2c3;
 		i2c2 = &i2c4;
 		rtc0 = &rtc;
-		watchdog0 = &watchdog0;
-		watchdog1 = &cluster1_core0_watchdog;
-		watchdog2 = &cluster1_core1_watchdog;
+		watchdog0 = &cluster1_core0_watchdog;
+		watchdog1 = &cluster1_core1_watchdog;
+		watchdog2 = &watchdog0;
 	};
 
 	chosen {
