@@ -713,18 +713,18 @@ int board_fix_fdt(void *rw_fdt_blob)
 	}
 
 	if (!sl28_has_ec_sgmii()) {
-		debug("%s: disabling eth_p0\n", __func__);
-		fdt_status_disabled_by_alias(rw_fdt_blob, "eth_p0");
+		debug("%s: disabling eth-p0\n", __func__);
+		fdt_status_disabled_by_alias(rw_fdt_blob, "eth-p0");
 	}
 
 	if (!sl28_has_ec_rgmii()) {
-		debug("%s: disabling eth_p1\n", __func__);
-		fdt_status_disabled_by_alias(rw_fdt_blob, "eth_p1");
+		debug("%s: disabling eth-p1\n", __func__);
+		fdt_status_disabled_by_alias(rw_fdt_blob, "eth-p1");
 	}
 
 	if (sl28_has_internal_switch()) {
-		debug("%s: enabling eth_p2\n", __func__);
-		fdt_status_okay_by_alias(rw_fdt_blob, "eth_p2");
+		debug("%s: enabling eth-p2\n", __func__);
+		fdt_status_okay_by_alias(rw_fdt_blob, "eth-p2");
 	}
 
 	return 0;
