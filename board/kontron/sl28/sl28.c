@@ -310,7 +310,7 @@ static void sl28_evaluate_bootsel_pins(void)
 	}
 }
 
-static void sl28_stop_in_failsafe_or_recovery(void)
+static void sl28_stop_in_failsafe_or_test_mode(void)
 {
 	enum boot_source src = sl28_boot_source();
 
@@ -376,7 +376,7 @@ int fsl_board_late_init(void)
 
 	/* the following order is important! */
 	sl28_evaluate_bootsel_pins();
-	sl28_stop_in_failsafe_or_recovery();
+	sl28_stop_in_failsafe_or_test_mode();
 	sl28_load_env_script();
 
 #if defined(CONFIG_KEX_EEP_BOOTCOUNTER)
