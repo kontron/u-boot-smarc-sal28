@@ -131,12 +131,18 @@ static int do_sl28_nvm(cmd_tbl_t *cmdtp, int flag, int argc,
 	struct udevice *dev;
 	u16 nvm;
 	int ret;
+	char *endp;
 
 	if (i2c_get_chip_for_busnum(0, CPLD_I2C_ADDR, 1, &dev))
 		return CMD_RET_FAILURE;
 
 	if (argc > 1) {
-		nvm = simple_strtoul(argv[1], NULL, 16);
+		nvm = simple_strtoul(argv[1], &endp, 16);
+		if (*endp != '\0') {
+			printf("ERROR: argument is not a valid number\n");
+			ret = -EINVAL;
+			goto out;
+		}
 		ret = ufm_write(dev, nvm);
 		if (ret)
 			goto out;
