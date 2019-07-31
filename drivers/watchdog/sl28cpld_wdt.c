@@ -19,9 +19,12 @@
 #define WDOG_CNT  0x07
 
 #define WDOG_CTRL_EN_MASK 0x03
-#define WDOG_CTRL_EN0 0x01
-#define WDOG_CTRL_EN1 0x02
-#define WDOG_KICK_VAL 0x6b
+#define WDOG_CTRL_EN0                 BIT(0)
+#define WDOG_CTRL_EN1                 BIT(1)
+#define WDOG_CTRL_LOCK                BIT(2)
+#define WDOG_CTRL_ISSUE_RESET         BIT(6)
+#define WDOG_CTRL_ASSERT_WDT_TIME_OUT BIT(7)
+#define WDOG_KICK_VAL                 0x6b
 
 static int sl28cpld_wdt_reset(struct udevice *dev)
 {
@@ -57,10 +60,23 @@ static int sl28cpld_wdt_start(struct udevice *dev, u64 timeout, ulong flags)
 
 	/* enable it, depending on the flags either the recovery one or
 	 * the normal one */
-	if (flags & 1)
+	if (flags & BIT(0))
 		val |= WDOG_CTRL_EN1;
 	else
 		val |= WDOG_CTRL_EN0;
+
+	if (flags & BIT(1))
+		val |= WDOG_CTRL_LOCK;
+
+	if (flags & BIT(2))
+		val &= ~WDOG_CTRL_ISSUE_RESET;
+	else
+		val |= WDOG_CTRL_ISSUE_RESET;
+
+	if (flags & BIT(3))
+		val |= WDOG_CTRL_ASSERT_WDT_TIME_OUT;
+	else
+		val &= ~WDOG_CTRL_ASSERT_WDT_TIME_OUT;
 
 	return dm_i2c_write(dev, WDOG_CTRL, &val, 1);
 }
