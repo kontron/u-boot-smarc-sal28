@@ -84,3 +84,12 @@ loaded from SPI flash offset `3F_0000h`.
 The flash map is divided into two sections. Both sections have the same
 layout. One is factory write protected while the other is inteded to be
 update by the user.
+
+## Configuration Store
+
+The board can be configured with different reset configuration words. To
+make it easy for the user to switch between them, there is an extra
+partition where all factory provided RCWs are stored. At the beginning of
+this partition, there is a script which can be run by the user to list and
+install the RCWs. The u-boot provides a handy environment variable
+`install_rcw` which can be executed with `run install_rcw`.
