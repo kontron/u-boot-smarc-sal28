@@ -191,13 +191,19 @@ static char *sl28_rcw_filename(char *buf, size_t len)
 	return buf;
 }
 
-static void sl28_stop_recovery_watchdog(void)
+static void sl28_stop_or_kick_failsafe_watchdog(void)
 {
 	int ret;
 	struct udevice *dev;
+	char *kick = env_get("kick_failsafe_watchdog");
 
 	ret = uclass_get_device_by_seq(UCLASS_WDT, 2, &dev);
-	if (!ret)
+	if (ret)
+		return;
+
+	if (kick)
+		wdt_reset(dev);
+	else
 		wdt_stop(dev);
 }
 
@@ -378,7 +384,7 @@ int fsl_board_late_init(void)
 #endif
 
 	/* keep this at the lastest point in time */
-	sl28_stop_recovery_watchdog();
+	sl28_stop_or_kick_failsafe_watchdog();
 
 	return 0;
 }
