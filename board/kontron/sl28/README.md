@@ -2,7 +2,7 @@
 
 ## LS1028A SoC Overview
 
-Please refer arch/arm/cpu/armv8/fsl-layerscape/doc/README.soc.
+Please refer [arch/arm/cpu/armv8/fsl-layerscape/doc/README.soc][2].
 
 ## Board Overview
 
@@ -223,3 +223,4 @@ To safe power, the user might disable different devices and clock output of
 the board.
 
 [1]: https://github.com/kontron/rcw-smarc-sal28/blob/master/README.md
+[2]: ../../../arch/arm/cpu/armv8/fsl-layerscape/doc/README.soc
