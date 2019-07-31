@@ -196,7 +196,7 @@ static void sl28_stop_recovery_watchdog(void)
 	int ret;
 	struct udevice *dev;
 
-	ret = uclass_get_device_by_seq(UCLASS_WDT, 0, &dev);
+	ret = uclass_get_device_by_seq(UCLASS_WDT, 2, &dev);
 	if (!ret)
 		wdt_stop(dev);
 }
