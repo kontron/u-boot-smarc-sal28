@@ -143,6 +143,11 @@ static int do_sl28_nvm(cmd_tbl_t *cmdtp, int flag, int argc,
 			ret = -EINVAL;
 			goto out;
 		}
+
+		/* We swap all bits, because the a zero bit in hardware means the
+		 * feature is enabled. But this is hard for the user. */
+		nvm ^= 0xffff;
+
 		ret = ufm_write(dev, nvm);
 		if (ret)
 			goto out;
@@ -151,6 +156,8 @@ static int do_sl28_nvm(cmd_tbl_t *cmdtp, int flag, int argc,
 		ret = ufm_read(dev, &nvm);
 		if (ret)
 			goto out;
+		nvm ^= 0xffff;
+
 		printf("%04hx\n", nvm);
 	}
 
