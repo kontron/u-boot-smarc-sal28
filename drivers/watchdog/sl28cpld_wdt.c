@@ -87,6 +87,7 @@ static int sl28cpld_wdt_expire_now(struct udevice *dev, ulong flags)
 
 static int sl28cpld_wdt_probe(struct udevice *dev)
 {
+	debug("%s: Probing wdt%u (sl28cpld-wdt)\n", __func__, dev->seq);
 	i2c_set_chip_flags(dev, DM_I2C_CHIP_RD_ADDRESS |
 			   DM_I2C_CHIP_WR_ADDRESS);
 
