@@ -56,6 +56,11 @@
 #define CONFIG_HAS_ETH0
 #define CONFIG_HAS_ETH1
 #define CONFIG_HAS_ETH2
+#define CONFIG_HAS_ETH3
+#define CONFIG_HAS_ETH4
+#define CONFIG_HAS_ETH5
+#define CONFIG_HAS_ETH6
+#define CONFIG_HAS_ETH7
 #endif
 
 /* needed for RGMII phy init */
