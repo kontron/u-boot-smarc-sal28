@@ -575,6 +575,21 @@ void emb_eep_init_r(int eeprom_num_serial, int eeprom_num_eth, int num_of_macs)
 		emb_eep_import_ethaddr (vpdi, "eth4addr", macnum++, D_ETH4ADDR);
 #endif
 
+#if defined(CONFIG_HAS_ETH5)
+	if (num_of_macs >= 6)
+		emb_eep_import_ethaddr (vpdi, "eth5addr", macnum++, D_ETH5ADDR);
+#endif
+
+#if defined(CONFIG_HAS_ETH6)
+	if (num_of_macs >= 7)
+		emb_eep_import_ethaddr (vpdi, "eth6addr", macnum++, D_ETH6ADDR);
+#endif
+
+#if defined(CONFIG_HAS_ETH7)
+	if (num_of_macs >= 8)
+		emb_eep_import_ethaddr (vpdi, "eth7addr", macnum++, D_ETH7ADDR);
+#endif
+
 	return;
 }
 

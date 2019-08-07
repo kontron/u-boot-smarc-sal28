@@ -74,6 +74,18 @@ typedef struct {
 #define D_ETH4ADDR "02:00:00:01:00:24"
 #endif
 
+#ifndef D_ETH5ADDR
+#define D_ETH5ADDR "02:00:00:01:00:25"
+#endif
+
+#ifndef D_ETH6ADDR
+#define D_ETH6ADDR "02:00:00:01:00:26"
+#endif
+
+#ifndef D_ETH7ADDR
+#define D_ETH7ADDR "02:00:00:01:00:27"
+#endif
+
 extern void emb_eep_init_r(int eeprom_num_serial, int eeprom_num_eth, int num_of_macs);
 extern char * emb_eep_find_string_in_dmi (int eeprom_num, int dmi_num, int string_num);
 extern char * emb_eep_find_mac_in_dmi (int eeprom_num, int eth_num);
