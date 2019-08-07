@@ -26,7 +26,7 @@
 		eth-p0 = &eth_p0;
 		eth-p1 = &eth_p1;
 		eth-p2 = &eth_p2;
-		ethernet3 = &netc_mdio;
+		ethernet8 = &netc_mdio;
 		i2c0 = &i2c0;
 		i2c1 = &i2c3;
 		i2c2 = &i2c4;
