@@ -665,7 +665,7 @@ int misc_init_r(void)
 
 #ifdef CONFIG_EMB_EEP_I2C_EEPROM
 	EMB_EEP_I2C_EEPROM_BUS_NUM_1 = CONFIG_EMB_EEP_I2C_EEPROM_BUS_NUM_EE1;
-	emb_eep_init_r(1, 1, 4);
+	emb_eep_init_r(1, 1, 8);
 #endif
 
 	return 0;
