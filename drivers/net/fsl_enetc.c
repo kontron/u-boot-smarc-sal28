@@ -38,6 +38,8 @@ static inline void enetc_set_ierb_primary_mac(u8 port, u8 si, u8 *addr)
 	u16 lower = *(const u16 *)(addr + 4);
 	u32 upper = *(const u32 *)addr;
 
+	debug("%s: Writing MAC %pM to port %d, SI %d\n",
+	        __func__, addr, port, si);
 	enetc_write_reg(ENETC_IERB_PMAR(0, port, si), upper);
 	enetc_write_reg(ENETC_IERB_PMAR(1, port, si), lower);
 }
@@ -52,7 +54,7 @@ static void enetc_setup_port_macs(void)
 	for (p = 0; p <= pnum; p++)
 		for (si = 0; si < enetc_ports[p]; si++) {
 			/* virtual SIs */
-			ethno = si ? pnum + vsin++ : p;
+			ethno = si ? (pnum+1) + vsin++ : p;
 			eth_env_get_enetaddr_by_index("eth", ethno, addr);
 			if (is_zero_ethaddr(addr))
 				continue;
