@@ -407,8 +407,10 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 	const void *fdt = gd->fdt_blob;
 	phy_interface_t phy_intf;
 	const char *phy_mode;
-	int node, parent;
+	int node;
+#ifdef ENETC_DEBUG
 	char name[32];
+#endif
 	int reg;
 
 	hw->phy_addr = -1;
