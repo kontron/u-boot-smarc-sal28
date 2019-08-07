@@ -70,15 +70,6 @@ int do_kboardinfo (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv [])
 #if defined(CONFIG_HAS_ETH4)
 	printf ("MAC4 (eth4addr):     %s\n", getMacAddress (1, 5));
 #endif
-#if defined(CONFIG_HAS_ETH5)
-	printf ("MAC5 (eth5addr):     %s\n", getMacAddress (1, 6));
-#endif
-#if defined(CONFIG_HAS_ETH6)
-	printf ("MAC6 (eth6addr):     %s\n", getMacAddress (1, 7));
-#endif
-#if defined(CONFIG_HAS_ETH7)
-	printf ("MAC7 (eth7addr):     %s\n", getMacAddress (1, 8));
-#endif
 	printf ("Manufacturer Date:   %s\n", print_if_avail (getManufacturerDate(1)));
 	printf ("Revision:            %s\n", print_if_avail (getRevision(1)));
 #if defined(CONFIG_KEX_EEP_BOOTCOUNTER)
