@@ -22,6 +22,7 @@
 
 #include <common.h>
 #include <i2c.h>
+#include <environment.h>
 #include "emb_eep.h"
 
 #ifdef CONFIG_EMB_EEP_I2C_EEPROM
@@ -40,6 +41,32 @@ static char *emb_eep_find_entry_in_dmi (int eeprom_num, int dmi_num, int entry_n
 static char vpd_header[0x10];
 static char vpd_block[CONFIG_EMB_EEP_I2C_EEPROM_SIZE];
 static emb_eep_info vpdinfo;
+
+#ifndef CONFIG_NET_RANDOM_ETHADDR
+/*
+ * This function is used to increment default MAC address in case more than one default
+ * address is needed and only if no random address is generated
+ */
+static void increment_macstring(char *macstr, int inc)
+{
+        int i, macint;
+        unsigned char mac[6];
+
+        eth_parse_enetaddr(macstr, mac);
+        if (inc) {
+                /* add with carry */
+                for (i=5 ; i>=0 ; i--) {
+                        macint = (int)mac[i] + inc;
+                        mac[i] = macint & 0xff;
+                        if (macint > 255)
+                                inc = 1;
+                        else
+                                break;
+                }
+        }
+        sprintf(macstr, "%pM", mac);
+}
+#endif
 
 static int i2c_read_emb (emb_eep_info *vpdi, int offset, unsigned char *buffer, int len)
 {
@@ -392,48 +419,43 @@ static void emb_eep_default_ethaddr (void)
 #endif
 }
 
-static void emb_eep_import_ethaddr (emb_eep_info *vpdi, const char *eth_x_addr, int num, const char *d_ethaddr)
+static int emb_eep_import_ethaddr(emb_eep_info *vpdi, char *enveth, int num, const char *d_ethaddr)
 {
 	char *e_ethaddr;
 	char *v_ethaddr;
+	uchar vmac[6];
 
 	v_ethaddr = emb_eep_find_mac_in_dmi_164(vpdi, num);
+	eth_parse_enetaddr(v_ethaddr, vmac);
 
-	if ((v_ethaddr[2] != ':') || (v_ethaddr[5] != ':') ||
-		(v_ethaddr[8] != ':') || (v_ethaddr[11] != ':')  ||
-		(v_ethaddr[14] != ':') ) {
-		printf ("Error in MAC Address, no import possible\n");
-		return;
-	}
-	
-	e_ethaddr = env_get((char*)eth_x_addr);
-
-	if (v_ethaddr == NULL) {
-		printf ("WARNING: %s not found in embedded EEPROM\n", eth_x_addr);
-		return;
+	if (!is_valid_ethaddr(vmac)) {
+		return -ENODATA;
 	}
 
+	e_ethaddr = env_get(enveth);
 	/* Check if ethaddr already exists in Environment */
 	if (e_ethaddr) {
 		if (!strcmp(d_ethaddr, e_ethaddr)) {
 #ifndef CONFIG_NET_RANDOM_ETHADDR
 			printf ("Embedded EEPROM: Overwrite default %s to %s\n",
-			        eth_x_addr, v_ethaddr);
-			env_set((char*)eth_x_addr, v_ethaddr);
+			        enveth, v_ethaddr);
+			env_set(enveth, v_ethaddr);
 #endif
-			return;
+			return 0;
 		}
 		else {
 			if (strcmp (e_ethaddr, v_ethaddr)) {
 				printf ("Embedded EEPROM: Not overwriting existing %s\n",
-				        eth_x_addr);
+				        enveth);
 			}
-			return;
+			return 0;
 		}
 	}
 
-	debug ("Setenv %s\n", eth_x_addr);
-	env_set((char*)eth_x_addr, v_ethaddr);
+	debug ("Setenv %s\n", enveth);
+	env_set(enveth, v_ethaddr);
+
+	return 0;
 }
 
 
@@ -524,7 +546,14 @@ void emb_eep_init_r(int eeprom_num_serial, int eeprom_num_eth, int num_of_macs)
 {
 	char *val;
 	emb_eep_info *vpdi;
-	int macnum = 1;
+	int num;
+	char ethname[32];
+
+#ifndef CONFIG_NET_RANDOM_ETHADDR
+	char d_ethaddr[] = D_ETHADDR;
+#else
+	char *d_ethaddr = NULL;
+#endif
 
 	vpdi = &vpdinfo;
 	vpdi->block = &vpd_block[0];
@@ -551,29 +580,16 @@ void emb_eep_init_r(int eeprom_num_serial, int eeprom_num_eth, int num_of_macs)
 	/*
 	 * Import eth addresses to environment
 	 */
-#if defined(CONFIG_HAS_ETH0)
-	emb_eep_import_ethaddr (vpdi, "ethaddr", macnum++, D_ETHADDR);
+	for (num = 0 ; num < num_of_macs ; num++) {
+		sprintf(ethname, num ? "eth%daddr" : "ethaddr", num);
+#ifndef CONFIG_NET_RANDOM_ETHADDR
+		/* use incremented D_ETHADDR if random ethaddr not available */
+		increment_macstring(d_ethaddr, num);
 #endif
-
-#if defined(CONFIG_HAS_ETH1)
-	if (num_of_macs >= 2)
-		emb_eep_import_ethaddr (vpdi, "eth1addr", macnum++, D_ETH1ADDR);
-#endif
-
-#if defined(CONFIG_HAS_ETH2)
-	if (num_of_macs >= 3)
-		emb_eep_import_ethaddr (vpdi, "eth2addr", macnum++, D_ETH2ADDR);
-#endif
-
-#if defined(CONFIG_HAS_ETH3)
-	if (num_of_macs >= 4)
-		emb_eep_import_ethaddr (vpdi, "eth3addr", macnum++, D_ETH3ADDR);
-#endif
-
-#if defined(CONFIG_HAS_ETH4)
-	if (num_of_macs >= 5)
-		emb_eep_import_ethaddr (vpdi, "eth4addr", macnum++, D_ETH4ADDR);
-#endif
+		if (emb_eep_import_ethaddr (vpdi, ethname, num+1, d_ethaddr))
+			printf ("EEPROM MAC Address %d not found, cannot import to %s\n",
+			        num, ethname);
+	}
 
 	return;
 }
