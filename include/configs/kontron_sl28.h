@@ -52,15 +52,6 @@
 #define CFG_ENETC_PHYS_ADDR 0x1f0000000ULL
 #define CFG_ENETC_PHYS_SIZE 0x10000000UL
 #define CONFIG_FSL_MEMAC
-
-#define CONFIG_HAS_ETH0
-#define CONFIG_HAS_ETH1
-#define CONFIG_HAS_ETH2
-#define CONFIG_HAS_ETH3
-#define CONFIG_HAS_ETH4
-#define CONFIG_HAS_ETH5
-#define CONFIG_HAS_ETH6
-#define CONFIG_HAS_ETH7
 #endif
 
 /* needed for RGMII phy init */
