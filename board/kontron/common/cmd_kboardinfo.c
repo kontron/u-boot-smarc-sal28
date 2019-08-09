@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Kontron Europe GmbH
+ * Copyright 2019 Kontron Europe GmbH
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -28,20 +28,19 @@
 #include "kboardinfo.h"
 #include "emb_eep.h"
 
-char *print_if_avail (char *text)
+static char *print_if_avail(char *text)
 {
 	int idx = 0;
-	if (text != NULL){
+	if (text != NULL) {
 		while (text[idx] == 0x20)
 			idx++;
 
 		return text+idx;
-	}
-	else
+	} else
 		return "na";
 }
 
-int do_kboardinfo (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv [])
+static int do_kboardinfo(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv [])
 {
 	int ethnum = 0;
 #if defined(CONFIG_EMB_EEP_SPI)
@@ -150,7 +149,6 @@ int do_kboardinfo (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv [])
 #endif
 	return 0;
 }
-
 
 U_BOOT_CMD (
 	kboardinfo,	3,	0,	do_kboardinfo,
