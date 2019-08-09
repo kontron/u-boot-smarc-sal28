@@ -40,6 +40,8 @@ static inline void enetc_set_ierb_primary_mac(u8 port, u8 si, u8 *addr)
 
 	debug("%s: Writing MAC %pM to port %d, SI %d\n",
 	        __func__, addr, port, si);
+	debug("        PMAR0 address is 0x%016llx\n",
+	      (unsigned long long)ENETC_IERB_PMAR(0, port, si));
 	enetc_write_reg(ENETC_IERB_PMAR(0, port, si), upper);
 	enetc_write_reg(ENETC_IERB_PMAR(1, port, si), lower);
 }
@@ -437,7 +439,7 @@ static int enetc_get_eth_phy_data(struct udevice *dev)
 	char path[64];
 
 	fdt_get_path(fdt, node, path, 64);
-	printf("phy path: %s\n", path);
+	ENETC_DBG(hw, "phy path: %s\n", path);
 
 	reg = fdtdec_get_int(fdt, node, "reg", -1);
 	if (reg < 0) {
@@ -725,6 +727,8 @@ static int enetc_start(struct udevice *dev)
 		ENETC_DBG(hw, "invalid MAC address, generate random ...\n");
 		net_random_ethaddr(plat->enetaddr);
 	}
+	debug("%s: Set device %d primary MAC address %pM\n", __func__,
+	       eth_get_dev_index(), plat->enetaddr);
 	enetc_set_primary_mac_addr(hw, plat->enetaddr);
 
 	ENETC_DBG(hw, "enabling port and rings ...\n");
