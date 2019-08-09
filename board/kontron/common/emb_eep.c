@@ -70,18 +70,10 @@ static void increment_macstring(char *macstr, int inc)
 
 static int i2c_read_emb (emb_eep_info *vpdi, int offset, unsigned char *buffer, int len)
 {
-#ifdef CONFIG_DM_I2C
 	dm_i2c_read(vpdi->i2c_dev,
 	            vpdi->eeprom_offset + offset,
 	            (unsigned char *) &buffer[0],
 	            len);
-#else
-	i2c_read (vpdi->eeprom_addr,
-	          vpdi->eeprom_offset + offset,
-	          vpdi->eeprom_addrlen,
-	          (unsigned char *) &buffer[0],
-	          len);
-#endif
 
 	return 0;
 }
@@ -92,17 +84,10 @@ static int i2c_write_emb (emb_eep_info *vpdi, int offset, unsigned char *buffer,
 	int ret = 0;
 	do {
 		len--;
-#ifdef CONFIG_DM_I2C
 		dm_i2c_write(vpdi->i2c_dev,
 		             vpdi->eeprom_offset + offset + len,
 		             buffer + len,
 		             1);
-#else
-		ret |= i2c_write(vpdi->eeprom_addr,
-	                         vpdi->eeprom_offset + offset + len,
-	                         vpdi->eeprom_addrlen,
-	                         buffer+len, 1);
-#endif
 		udelay(5000);
 	} while (len > 0);
 
@@ -508,20 +493,16 @@ static int emb_eep_init (emb_eep_info *vpdi)
 	}
 
 	/* read 6 bytes first */
-#ifdef CONFIG_DM_I2C
 	int ret;
 	ret = i2c_get_chip_for_busnum(vpdi->eeprom_busnum,
 	                              vpdi->eeprom_addr,
 	                              vpdi->eeprom_addrlen,
 	                              &(vpdi->i2c_dev));
 	if (ret) {
-		printf("EEPROM 0x%02x not foundon bus %d\n",
+		printf("EEPROM 0x%02x not found on bus %d\n",
 		       vpdi->eeprom_addr, vpdi->eeprom_busnum);
 		return -1;
 	}
-#else
-	i2c_set_bus_num(vpdi->eeprom_busnum);
-#endif
 
 	i2c_read_emb(vpdi, 0, (unsigned char *)&vpdi->header[0], 6);
 
