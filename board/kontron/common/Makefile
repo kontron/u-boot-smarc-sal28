@@ -9,7 +9,4 @@ obj-$(CONFIG_EMB_EEP_I2C_EEPROM) += emb_eep.o
 
 ifndef CONFIG_SPL_BUILD
 obj-$(CONFIG_CMD_KBOARDINFO) += cmd_kboardinfo.o
-
-# if kjtag support is required, include jamStapl
-obj-$(CONFIG_JAM_STAPL) += jamStapl/
 endif

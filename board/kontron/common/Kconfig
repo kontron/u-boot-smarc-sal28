@@ -16,12 +16,6 @@ config EMB_EEP_I2C_EEPROM
 	help
 	  This option enables embedded I2C EEPROM support for kboardinfo
 
-config JAM_STAPL
-	bool "JAM_STAPL kjtag driver support"
-	depends on !SPL_BUILD
-	help
-	  This option enables kjtag JAM_STAPL driver
-
 config EMB_EEP_I2C_EEPROM_BUS_NUM_EE1
 	int "Embedded EEPROM I2C bus number"
 	depends on EMB_EEP_I2C_EEPROM
