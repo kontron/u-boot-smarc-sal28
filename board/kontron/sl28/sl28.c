@@ -376,6 +376,17 @@ int fsl_board_late_init(void)
 
 	sl28_set_prompt();
 
+	/* When not in 'resuce' mode, load failsafe dp firmware */
+	if (env_get("PS1") == NULL) {
+		char *hdp_fw = env_get_default("hdp_fw_addr");
+		if (hdp_fw) {
+			memset(buf, 0x0, sizeof(buf));
+			sprintf(buf, "0x%08lx",
+			    simple_strtoul(hdp_fw, NULL, 16)+0x200000);
+		}
+		env_set("hdp_fw_addr", buf);
+	}
+
 	/* the following order is important! */
 	sl28_evaluate_bootsel_pins();
 	sl28_stop_in_failsafe_or_test_mode();
