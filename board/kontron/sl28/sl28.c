@@ -28,6 +28,7 @@
 #include <fdtdec.h>
 #include <miiphy.h>
 #include <fsl_memac.h>
+#include <fsl_sec.h>
 
 #include "sl28.h"
 #include "../common/emb_eep.h"
@@ -214,6 +215,10 @@ int board_init(void)
 	int cpld_version = sl28_cpld_version();
 #ifdef CONFIG_ENV_IS_NOWHERE
 	gd->env_addr = (ulong)&default_environment[0];
+#endif
+
+#ifdef CONFIG_FSL_CAAM
+	sec_init();
 #endif
 
 #ifdef CONFIG_FSL_LS_PPA
