@@ -31,6 +31,10 @@ void board_boot_order(u32 *spl_boot_list)
 		puts("Failsafe SPI boot\n");
 		spl_boot_list[0] = BOOT_DEVICE_SPI;
 		break;
+	case BOOT_SOURCE_MMC:
+		puts("eMMC boot\n");
+		spl_boot_list[0] = BOOT_DEVICE_MMC2;
+		break;
 	default:
 		panic("unexpected bootsource (%d)\n", src);
 		break;
