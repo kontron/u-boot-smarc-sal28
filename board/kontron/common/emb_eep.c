@@ -404,46 +404,6 @@ static void emb_eep_default_ethaddr (void)
 #endif
 }
 
-static int emb_eep_import_ethaddr(emb_eep_info *vpdi, char *enveth, int num, const char *d_ethaddr)
-{
-	char *e_ethaddr;
-	char *v_ethaddr;
-	uchar vmac[6];
-
-	v_ethaddr = emb_eep_find_mac_in_dmi_164(vpdi, num);
-	eth_parse_enetaddr(v_ethaddr, vmac);
-
-	if (!is_valid_ethaddr(vmac)) {
-		return -ENODATA;
-	}
-
-	e_ethaddr = env_get(enveth);
-	/* Check if ethaddr already exists in Environment */
-	if (e_ethaddr) {
-		if (!strcmp(d_ethaddr, e_ethaddr)) {
-#ifndef CONFIG_NET_RANDOM_ETHADDR
-			printf ("Embedded EEPROM: Overwrite default %s to %s\n",
-			        enveth, v_ethaddr);
-			env_set(enveth, v_ethaddr);
-#endif
-			return 0;
-		}
-		else {
-			if (strcmp (e_ethaddr, v_ethaddr)) {
-				printf ("Embedded EEPROM: Not overwriting existing %s\n",
-				        enveth);
-			}
-			return 0;
-		}
-	}
-
-	debug ("Setenv %s\n", enveth);
-	env_set(enveth, v_ethaddr);
-
-	return 0;
-}
-
-
 static int emb_eep_check_header (emb_eep_info *vpdi)
 {
 	if (*(vpdi->header + 1) != '3'){
@@ -523,53 +483,88 @@ static int emb_eep_init (emb_eep_info *vpdi)
 /*
  * initialize environment from embedded EEPROM
  */
-void emb_eep_init_r(int eeprom_num_serial, int eeprom_num_eth, int num_of_macs)
+void emb_eep_init_r(int eeprom_num, int macs_expected)
 {
 	char *val;
 	emb_eep_info *vpdi;
 	int num;
 	char ethname[32];
-
-#ifndef CONFIG_NET_RANDOM_ETHADDR
-	char d_ethaddr[] = D_ETHADDR;
-#else
-	char *d_ethaddr = NULL;
-#endif
+	char *e_ethaddr;
+	char *v_ethaddr;
+	uchar mac[6];
 
 	vpdi = &vpdinfo;
 	vpdi->block = &vpd_block[0];
 	vpdi->header = &vpd_header[0];
-	vpdi->eeprom_num = eeprom_num_serial;
-
-	if (emb_eep_init (vpdi) == 0) {
-		/*
-		* Import serial number to environment
-		* Block SMBIOS, type 2, string number 4
-		*/
-		val = emb_eep_find_string_in_dmi (eeprom_num_serial, 2, 4);
-		if (val != NULL)
-			env_set("serial#", val);
-	}
-
-	vpdi->eeprom_num = eeprom_num_eth;
+	vpdi->eeprom_num = eeprom_num;
 
 	if (emb_eep_init (vpdi) != 0) {
 		emb_eep_default_ethaddr ();
 		return;
 	}
 
+	printf("VPD:   Using device 0x%02x on I2C Bus %d\n",
+	        vpdi->eeprom_addr, vpdi->eeprom_busnum);
+
+	/*
+	 * Import serial number to environment
+	 * Block SMBIOS, type 2, string number 4
+	 */
+	val = emb_eep_find_string_in_dmi (eeprom_num, 2, 4);
+	if (val != NULL)
+		env_set("serial#", val);
+
 	/*
 	 * Import eth addresses to environment
 	 */
-	for (num = 0 ; num < num_of_macs ; num++) {
+	num = 0;
+	while (true) {
 		sprintf(ethname, num ? "eth%daddr" : "ethaddr", num);
+
+		e_ethaddr = env_get(ethname);
+		eth_parse_enetaddr(e_ethaddr, mac);
+		if (!is_valid_ethaddr(mac))
+			e_ethaddr = NULL;
+
+		v_ethaddr = emb_eep_find_mac_in_dmi_164(vpdi, num+1);
+		if (!v_ethaddr)
+			/* no more MAC addresses in EEPROM, exit from loop */
+			break;
+
+		eth_parse_enetaddr(v_ethaddr, mac);
+		if (!is_valid_ethaddr(mac)) {
+			v_ethaddr = NULL;
+		}
+
+		/* must increment 'num' before loop can 'continue' */
+		num++;
+		/* use incremented D_ETHADDR if no random ethaddr available */
+		if (!v_ethaddr && !e_ethaddr) {
 #ifndef CONFIG_NET_RANDOM_ETHADDR
-		/* use incremented D_ETHADDR if random ethaddr not available */
-		increment_macstring(d_ethaddr, num);
+			char d_ethaddr[] = D_ETHADDR;
+
+			increment_macstring(d_ethaddr, num-1);
+			env_set(ethname, d_ethaddr);
+			printf("       Using default %s\n", ethname);
+			continue;
+#else
+			printf("*** Warning - %s not valid\n", ethname);
+			continue;
 #endif
-		if (emb_eep_import_ethaddr (vpdi, ethname, num+1, d_ethaddr))
-			printf ("EEPROM MAC Address %d not found, cannot import to %s\n",
-			        num, ethname);
+		}
+
+		if (e_ethaddr && (strcmp(v_ethaddr, e_ethaddr))) {
+			printf("       Using ENV %s%s\n", ethname, v_ethaddr ?
+			       " (overriding VPD)" : "");
+			continue;
+		}
+
+		env_set(ethname, v_ethaddr);
+	}
+
+	if (macs_expected && (macs_expected != num)) {
+		printf("*** Warning - Expected MAC address count (%d) differs "
+		       "from VPD MAC count %d\n", macs_expected, num);
 	}
 
 	return;
