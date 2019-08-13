@@ -37,7 +37,7 @@ extern int EMB_EEP_I2C_EEPROM_BUS_NUM_1;
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#define MAX_BOARD_ETHNUM 8
+#define SL28_MAX_ETHNUM 0
 
 #define CPLD_I2C_ADDR 0x4a
 #define REG_CPLD_VER  0x03
@@ -684,7 +684,7 @@ int misc_init_r(void)
 
 #ifdef CONFIG_EMB_EEP_I2C_EEPROM
 	EMB_EEP_I2C_EEPROM_BUS_NUM_1 = CONFIG_EMB_EEP_I2C_EEPROM_BUS_NUM_EE1;
-	emb_eep_init_r(1, 1, MAX_BOARD_ETHNUM);
+	emb_eep_init_r(1, SL28_MAX_ETHNUM);
 #endif
 
 	return 0;
@@ -797,16 +797,16 @@ char *getRevision (int eeprom_num)
 
 char *getMacAddress (int eeprom_num, int eth_num)
 {
-        char *macaddress;
+	char *macaddress;
 
-	if (eth_num > MAX_BOARD_ETHNUM)
+	macaddress = emb_eep_find_mac_in_dmi(eeprom_num, eth_num);
+	if (SL28_MAX_ETHNUM == 0)
+		return macaddress;
+
+	if (eth_num > SL28_MAX_ETHNUM)
 		return NULL;
 
-        macaddress = emb_eep_find_mac_in_dmi(eeprom_num, eth_num);
-        if (macaddress != NULL)
-                return (macaddress);
-        else
-                return "na";
+	return (macaddress ? macaddress : "na");
 }
 
 uint64_t getBootCounter (int eeprom_num)
