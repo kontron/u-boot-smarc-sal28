@@ -332,6 +332,17 @@ static void sl28_stop_in_failsafe_or_test_mode(void)
 	}
 }
 
+static void sl28_fixup_failsafe_environment()
+{
+	if (sl28_boot_source() != BOOT_SOURCE_FSPI)
+		return;
+
+	/* hdp load takes a decimal representation or hexadecimal depending the
+	 * the prefix. Unfortunately, env_set_hex() doesn't prepend the prefix.
+	 * So we are using the decimal representation here. */
+	env_set_ulong("hdp_fw_addr", HDP_FW_ADDR - 0x200000);
+}
+
 static void sl28_load_env_script(void)
 {
 	loff_t size;
@@ -380,17 +391,7 @@ int fsl_board_late_init(void)
 	env_set_ulong("bootsource", sl28_boot_source());
 
 	sl28_set_prompt();
-
-	/* When not in 'resuce' mode, load failsafe dp firmware */
-	if (env_get("PS1") == NULL) {
-		char *hdp_fw = env_get_default("hdp_fw_addr");
-		if (hdp_fw) {
-			memset(buf, 0x0, sizeof(buf));
-			sprintf(buf, "0x%08lx",
-			    simple_strtoul(hdp_fw, NULL, 16)+0x200000);
-		}
-		env_set("hdp_fw_addr", buf);
-	}
+	sl28_fixup_failsafe_environment();
 
 	/* the following order is important! */
 	sl28_evaluate_bootsel_pins();
