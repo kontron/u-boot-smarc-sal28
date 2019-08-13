@@ -54,6 +54,10 @@
 	u-boot,dm-pre-reloc;
 };
 
+&esdhc1 {
+	u-boot,dm-pre-reloc;
+};
+
 &serial0 {
 	u-boot,dm-pre-reloc;
 	clock-frequency = <200000000>;
