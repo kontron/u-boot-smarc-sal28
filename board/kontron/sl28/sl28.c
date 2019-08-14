@@ -731,7 +731,7 @@ int board_fix_fdt(void *rw_fdt_blob)
 
 	fdt_increase_size(rw_fdt_blob, 32);
 
-	if (src == BOOT_SOURCE_I2C || src == BOOT_SOURCE_MMC) {
+	if (src == BOOT_SOURCE_FSPI || src == BOOT_SOURCE_SDHC) {
 		config_node = fdt_path_offset(rw_fdt_blob, "/config");
 		fdt_setprop_u32(rw_fdt_blob, config_node,
 		                "load-environment", 0);
