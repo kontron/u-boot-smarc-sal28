@@ -20,6 +20,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #define GPPORCR1_MEM_4GB_CS0_1      (3 << 5)
 #define GPPORCR1_MEM_4GB_CS0_2      (4 << 5)
 #define GPPORCR1_MEM_8GB_CS0_1_2_3  (5 << 5)
+#define GPPORCR1_MEM_8GB_CS0_1      (6 << 5)
 
 #define DCFG_GPPORCR1 0x20
 
@@ -171,11 +172,11 @@ int fsl_ddr_get_dimm_params(dimm_params_t *pdimm,
 
 	switch (gpporcr1 & GPPORCR1_MEM_MASK)
 	{
-	case GPPORCR1_MEM_2GB_CS0:
+	case GPPORCR1_MEM_512MB_CS0:
                 ddr_raw_timing.n_ranks = 1;
+                ddr_raw_timing.n_row_addr = 14;
+                ddr_raw_timing.rank_density = 0x20000000;
                 ddr_raw_timing.mirrored_dimm = 0;
-		break;
-	case GPPORCR1_MEM_4GB_CS0_1:
 		break;
 	case GPPORCR1_MEM_1GB_CS0:
                 ddr_raw_timing.n_ranks = 1;
@@ -183,18 +184,23 @@ int fsl_ddr_get_dimm_params(dimm_params_t *pdimm,
                 ddr_raw_timing.rank_density = 0x40000000;
                 ddr_raw_timing.mirrored_dimm = 0;
 		break;
-	case GPPORCR1_MEM_512MB_CS0:
+	case GPPORCR1_MEM_2GB_CS0:
                 ddr_raw_timing.n_ranks = 1;
-                ddr_raw_timing.n_row_addr = 14;
-                ddr_raw_timing.rank_density = 0x20000000;
                 ddr_raw_timing.mirrored_dimm = 0;
+		break;
+	case GPPORCR1_MEM_4GB_CS0_1:
 		break;
 	case GPPORCR1_MEM_8GB_CS0_1_2_3:
                 ddr_raw_timing.n_ranks = 4;
-		gd->ram_size = 0x200000000ULL;
+		/* gd->ram_size = 0x200000000ULL; */
+		break;
+	case GPPORCR1_MEM_8GB_CS0_1:
+		ddr_raw_timing.rank_density = 0x100000000ULL;
+                ddr_raw_timing.n_col_addr = 11;
+		/* gd->ram_size = 0x200000000ULL; */
 		break;
 	case GPPORCR1_MEM_4GB_CS0_2:
-		gd->ram_size = 0x100000000ULL;
+		/* gd->ram_size = 0x100000000ULL; */
 		/* fallthrough for now */
 	default:
 		panic("Unsupported memory configuration (%08x)\n",
@@ -291,6 +297,7 @@ int fsl_initdram(void)
 	case GPPORCR1_MEM_4GB_CS0_2:
 		dram_size = 0x100000000ULL;
 		/* fallthrough for now */
+	case GPPORCR1_MEM_8GB_CS0_1:
 	case GPPORCR1_MEM_8GB_CS0_1_2_3:
 		dram_size = 0x200000000ULL;
 		/* fallthrough for now */
