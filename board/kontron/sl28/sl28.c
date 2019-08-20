@@ -186,7 +186,7 @@ static int sl28_get_boot_selection(void)
  */
 static char *sl28_rcw_filename(char *buf, size_t len)
 {
-	u32 scratchwr2 = in_le32(DCFG_BASE + DCFG_SCRATCHWR2);
+	u64 scratchwr2 = in_le32(DCFG_BASE + DCFG_SCRATCHWR2);
 
 	strncpy(buf, (char*)scratchwr2, len);
 	buf[len-1] = '\0';
@@ -332,7 +332,7 @@ static void sl28_stop_in_failsafe_or_test_mode(void)
 	}
 }
 
-static void sl28_fixup_failsafe_environment()
+static void sl28_fixup_failsafe_environment(void)
 {
 	if (sl28_boot_source() != BOOT_SOURCE_FSPI)
 		return;
