@@ -183,7 +183,7 @@ non-volatile. These can be changed by the `sl28 nvm` command.
 |   9 | Keep USB hub in reset                                           |
 |  10 | Keep eDP-to-LVDS converter in reset                             |
 |  11 | Enable I2C stuck recovery on I2C PM and I2C GP busses           |
-|  12 | Disable automatic onboard PHY H/W reset                         |
+|  12 | Enable automatic onboard PHY H/W reset                          |
 |  13 | reserved                                                        |
 |  14 | Used by the RCW to determine boot source                        |
 |  15 | Used by the RCW to determine boot source                        |
@@ -224,10 +224,11 @@ the board.
 
 ### Automatic reset of the onboard PHYs
 
-If you want to use Wake-on-LAN you should disable the automatic hardware
-reset of the onboard PHYs to prevent the reset of WOL registers in the PHY.
-Otherwise the Wake-on-LAN features will be disabled again when the board is
-powered-up again.
+By default, there is no hardware reset of the onboard PHY. This is because
+for Wake-on-LAN, some registers have to retain their values. If you don't
+use the WOL feature and a soft reset of the PHY is not enough you can
+enable the hardware reset. The onboard PHY hardware reset follows the
+power-on reset.
 
 [1]: https://github.com/kontron/rcw-smarc-sal28/blob/master/README.md
 [2]: ../../../arch/arm/cpu/armv8/fsl-layerscape/doc/README.soc
