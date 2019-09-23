@@ -163,6 +163,7 @@ bootloader or can be set by the user to alter the boot process.
 | cpld_version           | Holds the CPLD version, set automatically             |
 | rcw_filename           | Holds the current RCW filename, set automatically     |
 | bootsource             | Holds the current boot source, set automatically      |
+| bootsel                | Holds the `BOOT_SEL[2:0]` value, set automatically    |
 
 ### Automatic Bootsource variable
 
@@ -208,6 +209,10 @@ modified. Instead you can save your own selection of boot sources to the
 bootloader environment. Eg. the default value for the `boot_targets` will
 try to boot from many different boot media, so that you may not need the
 boot selection pins at all.
+
+The automatic variable `bootsel` is set on every bootloader startup and
+reflects the state of the pins at that time. The variable may be used in
+custom boot scripts.
 
 ## Non-volatile Board Configuration Bits
 
