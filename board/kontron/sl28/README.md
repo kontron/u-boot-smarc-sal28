@@ -164,6 +164,51 @@ bootloader or can be set by the user to alter the boot process.
 | rcw_filename           | Holds the current RCW filename, set automatically     |
 | bootsource             | Holds the current boot source, set automatically      |
 
+### Automatic Bootsource variable
+
+The `bootsource` variable is set on every bootloader startup according to
+the following table.
+
+| Value | Description                |
+| ----- | -------------------------- |
+|     1 | SD card (test mode)        |
+|     2 | eMMC, see below            |
+|     3 | I2C (normal mode)          |
+|     4 | SPI flash (failsafe mode)  |
+
+Please note, that this has nothing to do with the [boot selection
+pins](#boot-selection-pins).
+
+## Boot Selection Pins
+
+SMARC provides three boot selection pins `BOOT_SEL[2:0]#' and the standard
+also dictates a mapping between the boot source and these pins. This
+mapping is pretty generic and the SMARC-sAL28 board does not support all of
+it.
+
+| Value | SMARC compliant | Description                             |
+| ----- | --------------- | --------------------------------------- |
+|     0 | no              | *not supported*                         |
+|     1 | yes             | SD card                                 |
+|     2 | no              | *not supported*                         |
+|     3 | no              | *not supported*                         |
+|     4 | yes             | USB storage device                      |
+|     5 | yes             | PXE boot                                |
+|     6 | yes             | eMMC                                    |
+|     7 | no              | *special value*, do not modify variable |
+
+The bootloader will evaluate the setting and set the `boot_targets`
+variable accordingly. Please note, that if you save the environment
+afterwards, the `boot_targets` variable will be overwritten with this
+automatic setting. To restore the original value, please use the `env
+default` command, eg. `env default boot_targets`.
+
+If the pins are set to the special value `7` the variable will not be
+modified. Instead you can save your own selection of boot sources to the
+bootloader environment. Eg. the default value for the `boot_targets` will
+try to boot from many different boot media, so that you may not need the
+boot selection pins at all.
+
 ## Non-volatile Board Configuration Bits
 
 The board has 16 configuration bits which are stored in the CPLD and are
