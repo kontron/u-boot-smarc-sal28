@@ -392,6 +392,7 @@ int board_late_init(void)
 	env_set_ulong("variant", sl28_variant());
 	env_set("rcw_filename", sl28_rcw_filename(buf, sizeof(buf)));
 	env_set_ulong("bootsource", sl28_boot_source());
+	env_set_ulong("bootsel", sl28_get_boot_selection());
 
 	sl28_set_prompt();
 	sl28_fixup_failsafe_environment();
