@@ -14,7 +14,7 @@ module with an on-chip 6-port TSN switch and a 3D GPU.
 The LS1028A processors starts its boot process with a reset configuration
 word. This RCW can also contain a small set of interpreted commands,
 including conditions. (Usually) the last command of the RCW copies a
-bootloader from a storage device the internal SRAM and jumps to its entry
+bootloader from a storage device to the internal SRAM and jumps to its entry
 point. It is also possible to skip the copying and do execute-in-place from
 SPI flash, which is mapped to a memory window at `2000_0000h`.
 
