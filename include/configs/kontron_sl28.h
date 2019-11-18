@@ -15,9 +15,7 @@
 #include <asm/arch/config.h>
 #include <asm/arch/soc.h>
 
-/******************************************************************************
- * Link Definitions
- */
+/* Link Definitions */
 #define CONFIG_SYS_INIT_SP_ADDR         (CONFIG_SYS_FSL_OCRAM_BASE + 0xeff0)
 
 #define CONFIG_SKIP_LOWLEVEL_INIT
@@ -27,7 +25,7 @@
 #define CONFIG_SYS_MEMTEST_END          0x9fffffff
 #endif
 
-/******************************************************************************
+/*
  * SMP Definitinos
  */
 #define CPU_RELEASE_ADDR                secondary_boot_func
@@ -44,23 +42,6 @@
 /* Serial Port */
 #define CONFIG_SYS_NS16550_CLK          (get_bus_freq(0) / 2)
 #define CONFIG_SYS_BAUDRATE_TABLE       { 9600, 19200, 38400, 57600, 115200 }
-
-/******************************************************************************
- * ENETC
- */
-#ifdef CONFIG_FSL_ENETC
-#define CFG_ENETC_PHYS_ADDR 0x1f0000000ULL
-#define CFG_ENETC_PHYS_SIZE 0x10000000UL
-#define CONFIG_FSL_MEMAC
-#endif
-
-/* needed for RGMII phy init */
-#define CONFIG_LAST_STAGE_INIT
-
-/******************************************************************************
- * Miscellaneous configurable options
- */
-#define CONFIG_MISC_INIT_R
 
 #define CONFIG_SYS_LOAD_ADDR    (CONFIG_SYS_DDR_SDRAM_BASE + 0x10000000)
 
@@ -169,8 +150,7 @@
 /******************************************************************************
  * MMC
  */
-#ifdef CONFIG_MMC
-#define CONFIG_FSL_ESDHC
+#ifdef CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_MMC_HAS_CAPBLT_VS33
 #endif
 
@@ -244,6 +224,10 @@
 #define CONFIG_SYS_MONITOR_BASE CONFIG_SYS_TEXT_BASE
 #endif
 
+/* Ethernet */
+/* smallest ENETC BD ring has 8 entries */
+#define CONFIG_SYS_RX_ETH_BUFFER		8
+
 /******************************************************************************
  * SATA
  */
@@ -258,7 +242,6 @@
 #define CONFIG_SYS_SATA1                        AHCI_BASE_ADDR1
 
 /* needed for SDHC DMA transfers */
-#define CONFIG_TZPC_OCRAM_BSS_HEAP_NS
 #define OCRAM_NONSECURE_SIZE            0x00010000
 
 #endif /* __SL28_H */

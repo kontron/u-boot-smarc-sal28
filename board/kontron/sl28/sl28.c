@@ -140,9 +140,6 @@ static bool sl28_has_internal_switch(void)
 		if (sl28_has_sw_sgmii(i))
 			return true;
 
-	if (sl28_has_qsgmii())
-		return true;
-
 	return false;
 }
 
@@ -422,9 +419,127 @@ void detail_board_ddr_info(void)
 }
 
 #ifdef CONFIG_OF_BOARD_SETUP
-#ifdef CONFIG_FSL_ENETC
-extern void enetc_setup(void *blob);
-#endif
+/*
+ * Hardware default stream IDs are 0x4000 + PCI function #, but that's outside
+ * the acceptable range for SMMU.  Use Linux DT values instead or at least
+ * smaller defaults.
+ */
+#define ECAM_NUM_PFS			7
+#define ECAM_IERB_BASE			0x1F0800000
+#define ECAM_PFAMQ(pf, vf)		((ECAM_IERB_BASE + 0x800 + (pf) * \
+					  0x1000 + (vf) * 4))
+/* cache related transaction attributes for PCIe functions */
+#define ECAM_IERB_MSICAR		(ECAM_IERB_BASE + 0xa400)
+#define ECAM_IERB_MSICAR_VALUE		0x30
+
+/* number of VFs per PF, VFs have their own AMQ settings */
+static const u8 enetc_vfs[ECAM_NUM_PFS] = { 2, 2 };
+
+void setup_ecam_amq(void *blob)
+{
+	int streamid, sid_base, off;
+	int pf, vf, vfnn = 1;
+	u32 iommu_map[4];
+	int err;
+
+	/*
+	 * Look up the stream ID settings in the DT, if found apply the values
+	 * to HW, otherwise use HW values shifted down by 4.
+	 */
+	off = fdt_node_offset_by_compatible(blob, 0, "pci-host-ecam-generic");
+	if (off < 0) {
+		debug("ECAM node not found\n");
+		return;
+	}
+
+	err = fdtdec_get_int_array(blob, off, "iommu-map", iommu_map, 4);
+	if (err) {
+		sid_base = in_le32(ECAM_PFAMQ(0, 0)) >> 4;
+		debug("\"iommu-map\" not found, using default SID base %04x\n",
+		      sid_base);
+	} else {
+		sid_base = iommu_map[2];
+	}
+	/* set up AMQs for all integrated PCI functions */
+	for (pf = 0; pf < ECAM_NUM_PFS; pf++) {
+		streamid = sid_base + pf;
+		out_le32(ECAM_PFAMQ(pf, 0), streamid);
+
+		/* set up AMQs for VFs, if any */
+		for (vf = 0; vf < enetc_vfs[pf]; vf++, vfnn++) {
+			streamid = sid_base + ECAM_NUM_PFS + vfnn;
+			out_le32(ECAM_PFAMQ(pf, vf + 1), streamid);
+		}
+	}
+}
+
+void setup_ecam_cacheattr(void)
+{
+	/* set MSI cache attributes */
+	out_le32(ECAM_IERB_MSICAR, ECAM_IERB_MSICAR_VALUE);
+}
+
+#define IERB_PFMAC(pf, vf, n)		(ECAM_IERB_BASE + 0x8000 + (pf) * \
+					 0x100 + (vf) * 8 + (n) * 4)
+
+static int ierb_fno_to_pf[] = {0, 1, 2, -1, -1, -1, 3};
+
+/* ENETC Port MAC address registers, accepts big-endian format */
+static void ierb_set_mac_addr(int fno, const u8 *addr)
+{
+	u16 lower = *(const u16 *)(addr + 4);
+	u32 upper = *(const u32 *)addr;
+
+	if (ierb_fno_to_pf[fno] < 0)
+		return;
+
+	out_le32(IERB_PFMAC(ierb_fno_to_pf[fno], 0, 0), upper);
+	out_le32(IERB_PFMAC(ierb_fno_to_pf[fno], 0, 1), (u32)lower);
+}
+
+/* copies MAC addresses in use to IERB so Linux can also use them */
+void setup_mac_addr(void *blob)
+{
+	struct eth_pdata *plat;
+	struct udevice *it;
+	struct uclass *uc;
+	int fno, offset;
+	u32 portno;
+	char path[256];
+
+	uclass_get(UCLASS_ETH, &uc);
+	uclass_foreach_dev(it, uc) {
+		if (!it->driver || !it->driver->name)
+			continue;
+		if (!strcmp(it->driver->name, "enetc_eth")) {
+			/* PFs use the same addresses in Linux and U-Boot */
+			plat = dev_get_platdata(it);
+			if (!plat)
+				continue;
+
+			fno = PCI_FUNC(pci_get_devfn(it));
+			ierb_set_mac_addr(fno, plat->enetaddr);
+		} else if (!strcmp(it->driver->name, "felix-port")) {
+			/* Switch ports should also use the same addresses */
+			plat = dev_get_platdata(it);
+			if (!plat)
+				continue;
+			if (!ofnode_valid(it->node))
+				continue;
+			if (ofnode_read_u32(it->node, "reg", &portno))
+				continue;
+			sprintf(path,
+				"/soc/pcie@1f0000000/switch@0,5/ports/port@%d",
+				(int)portno);
+			offset = fdt_path_offset(blob, path);
+			if (offset < 0)
+				continue;
+			fdt_setprop(blob, offset, "mac-address",
+				    plat->enetaddr, 6);
+		}
+	}
+}
+
 int ft_board_setup(void *blob, bd_t *bd)
 {
 	u64 base[CONFIG_NR_DRAM_BANKS];
@@ -450,234 +565,15 @@ int ft_board_setup(void *blob, bd_t *bd)
 
 	fdt_fixup_memory_banks(blob, base, size, 2);
 
-#ifdef CONFIG_FSL_ENETC
-	enetc_setup(blob);
-#endif
+	fdt_fixup_icid(blob);
+
+	setup_ecam_amq(blob);
+	setup_ecam_cacheattr();
+	setup_mac_addr(blob);
+
 	return 0;
 }
 #endif
-
-#define NETC_PF0_BAR0_BASE	0x1f8010000UL
-#define NETC_PF0_ECAM_BASE	0x1f0000000UL
-#define NETC_PF1_BAR0_BASE	0x1f8050000UL
-#define NETC_PF1_ECAM_BASE	0x1f0001000UL
-#define NETC_PF5_BAR0_BASE	0x1f8140000UL
-#define NETC_PF2_ECAM_BASE	0x1f0002000UL
-#define NETC_PF5_ECAM_BASE	0x1f0005000UL
-#define NETC_PCS_QSGMIICR1	0x001ea1884UL
-#define NETC_PCS_SGMIICR1(n)	(0x001ea1804UL + (n) * 0x10)
-extern void enetc_imdio_write(struct mii_dev *bus, int port, int dev, int reg, u16 val);
-extern int enetc_imdio_read(struct mii_dev *bus, int port, int dev, int reg);
-
-static void setup_ec_rgmii(void)
-{
-	struct mii_dev *ext_bus;
-	char *mdio_name = "netc_mdio";
-	int phy_addr = 4;
-	int value;
-
-	/* turn on PCI function */
-	out_le16(NETC_PF1_ECAM_BASE + 4, 0xffff);
-	out_le32(NETC_PF1_BAR0_BASE + 0x8300, 0x8006);
-
-	/* configure AQR PHY */
-	ext_bus = miiphy_get_dev_by_name(mdio_name);
-	if (!ext_bus) {
-		printf("couldn't find MDIO bus, ignoring the PHY\n");
-		return;
-	}
-	/* Atheros magic */
-	/* MMD7 0x8016 */
-	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0d, 0x0007);
-	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0e, 0x8016);
-	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0d, 0x4007);
-	value = ext_bus->read(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0e);
-	if (value == 0xffff)
-		goto phy_err;
-	value |= 0x0018;
-	value &= ~0x0180;
-	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0e, value);
-
-	/* rgmii tx clock delay */
-	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x1d, 0x0005);
-	value = ext_bus->read(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x1e);
-	if (value == 0xffff)
-		goto phy_err;
-	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x1e, value | 0x0100);
-
-	/* PHC control debug register 0*/
-	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x1d, 0x001f);
-	value = ext_bus->read(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x1e);
-	if (value == 0xffff)
-		goto phy_err;
-	value |= 0x0008; /* set RGMII IO to 1V8 */
-	value |= 0x0004; /* enable PLL */
-	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x1e, value);
-
-	/* restart AN */
-	ext_bus->write(ext_bus, phy_addr, MDIO_DEVAD_NONE, 0x0d, 0x1200);
-
-	return;
-phy_err:
-	printf("RGMII PHY access error, giving up.\n");
-}
-
-static void setup_sgmii_common(struct mii_dev *bus, int port)
-{
-	u32 tmp;
-	u16 value;
-	int to;
-
-	tmp = in_le32(NETC_PCS_SGMIICR1(port));
-	tmp &= ~0xf8000000;
-	tmp |= port << 27;
-	out_le32(NETC_PCS_SGMIICR1(port), tmp);
-
-	value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
-	enetc_imdio_write(bus, port, MDIO_DEVAD_NONE, 0x14, value);
-	/* Dev ability according to SGMII specification */
-	value = PHY_SGMII_DEV_ABILITY_SGMII;
-	enetc_imdio_write(bus, port, MDIO_DEVAD_NONE, 0x04, value);
-	/* Adjust link timer for SGMII */
-	enetc_imdio_write(bus, port, MDIO_DEVAD_NONE, 0x13, 0x0003);
-	enetc_imdio_write(bus, port, MDIO_DEVAD_NONE, 0x12, 0x06a0);
-
-	/* restart AN */
-	value = PHY_SGMII_CR_DEF_VAL | PHY_SGMII_CR_RESET_AN;
-	enetc_imdio_write(bus, port, MDIO_DEVAD_NONE, 0x00, value);
-
-	/* wait for link */
-	to = 1000;
-	do {
-		value = enetc_imdio_read(bus, port, MDIO_DEVAD_NONE, 0x01);
-		if ((value & 0x0024) == 0x0024)
-			break;
-	} while (--to);
-	if ((value & 0x0024) != 0x0024)
-		printf("PCS[%d] didn't link up, giving up. (%04x)\n", port,value);
-}
-
-static void setup_ec_sgmii(void)
-{
-	struct mii_dev bus = {0};
-	bus.priv = (void *)NETC_PF0_BAR0_BASE + 0x8030;
-
-	/* turn on PCI function */
-	out_le16(NETC_PF0_ECAM_BASE + 4, 0xffff);
-
-	setup_sgmii_common(&bus, 0);
-}
-
-static void setup_sw_sgmii(int n)
-{
-	struct mii_dev bus = {0};
-	bus.priv = (void *)NETC_PF5_BAR0_BASE + 0x8030;
-
-	/* turn on PCI function */
-	out_le16(NETC_PF2_ECAM_BASE + 4, 0xffff);
-	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
-
-	setup_sgmii_common(&bus, n);
-}
-
-void setup_qsgmii(void)
-{
-	struct mii_dev bus = {0};
-	u16 value;
-	int i, to;
-
-	//out_le32(NETC_PCS_QSGMIICR1, 0x20000000);
-
-	/* turn on PCI functions */
-	out_le16(NETC_PF2_ECAM_BASE + 4, 0xffff);
-	out_le16(NETC_PF5_ECAM_BASE + 4, 0xffff);
-
-	bus.priv = (void *)NETC_PF5_BAR0_BASE + 0x8030;
-
-	for (i = 0; i < 4; i++) {
-		value = PHY_SGMII_IF_MODE_SGMII | PHY_SGMII_IF_MODE_AN;
-		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x14, value);
-		/* Dev ability according to SGMII specification */
-		value = PHY_SGMII_DEV_ABILITY_SGMII;
-		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x04, value);
-		/* Adjust link timer for SGMII */
-		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x13, 0x0003);
-		enetc_imdio_write(&bus, i, MDIO_DEVAD_NONE, 0x12, 0x06a0);
-	}
-
-	for (i = 0; i < 4; i++) {
-		to = 1000;
-		do {
-			value = enetc_imdio_read(&bus, i, MDIO_DEVAD_NONE, 1);
-			if ((value & 0x0024) == 0x0024)
-				break;
-		} while (--to);
-		debug("BMSR: %04x\n", value);
-		if ((value & 0x24) != 0x24) {
-			debug("PCS[%d] didn't link up, giving up.\n", i);
-			break;
-		}
-	}
-}
-
-#define L2SW_PORTS		5
-#define L2SW_BASE		0x1fc000000
-#define L2SW_SYS		(L2SW_BASE + 0x010000)
-#define L2SW_ES0		(L2SW_BASE + 0x040000)
-#define L2SW_IS1		(L2SW_BASE + 0x050000)
-#define L2SW_IS2		(L2SW_BASE + 0x060000)
-#define L2SW_GMII(i)		(L2SW_BASE + 0x100000 + (i) * 0x10000)
-#define L2SW_QSYS		(L2SW_BASE + 0x200000)
-#define L2SW_SYS_SYSTEM		(L2SW_SYS + 0x00000E00)
-#define L2SW_SYS_RAM_CTRL	(L2SW_SYS + 0x00000F24)
-
-#define L2SW_ES0_TCAM_CTRL	(L2SW_ES0 + 0x000003C0)
-#define L2SW_IS1_TCAM_CTRL	(L2SW_IS1 + 0x000003C0)
-#define L2SW_IS2_TCAM_CTRL	(L2SW_IS2 + 0x000003C0)
-
-#define L2SW_GMII_CLOCK_CFG(i)	(L2SW_GMII(i) + 0x00000000)
-#define L2SW_GMII_MAC_ENA_CFG(i) (L2SW_GMII(i) + 0x0000001C)
-#define L2SW_GMII_MAC_IFG_CFG(i) (L2SW_GMII(i) + 0x0000001C + 0x14)
-
-#define L2SW_QSYS_SYSTEM	(L2SW_QSYS + 0x0000F460)
-#define L2SW_QSYS_SYSTEM_SW_PORT_MODE(i) (L2SW_QSYS_SYSTEM + 0x20 + (i) * 4)
-
-void setup_internal_switch(void)
-{
-	int to, i;
-
-	debug("setting up L2 switch\n");
-
-	/* core memories */
-	out_le32(L2SW_SYS_RAM_CTRL, 0x2);
-	to = 100;
-	while (--to && (in_le32(L2SW_SYS_RAM_CTRL) & 0x2))
-		udelay(1);
-	if (in_le32(L2SW_SYS_RAM_CTRL) & 0x2) {
-		printf("Timeout while waiting for switch memory initialization\n");
-		return;
-	}
-
-	/* switch core */
-	out_le32(L2SW_SYS_SYSTEM, 0x00000001);
-
-	/* ES0 */
-	out_le32(L2SW_ES0_TCAM_CTRL, 0x00000001);
-	/* IS1 */
-	out_le32(L2SW_IS1_TCAM_CTRL, 0x00000001);
-	/* IS2 */
-	out_le32(L2SW_IS2_TCAM_CTRL, 0x00000001);
-	udelay(20);
-
-	/* initialize the ports of the L2 switch */
-	for (i = 0; i < L2SW_PORTS; i++) {
-		/* MAC Tx and Rx */
-		out_le32(L2SW_GMII_MAC_ENA_CFG(i), 0x00000011);
-		out_le32(L2SW_GMII_CLOCK_CFG(i), 0x00000001);
-		out_le32(L2SW_QSYS_SYSTEM_SW_PORT_MODE(i), 0x00004a00);
-		out_le32(L2SW_GMII_MAC_IFG_CFG(i), 0x00000515);
-	}
-}
 
 int misc_init_r(void)
 {
@@ -691,26 +587,39 @@ int misc_init_r(void)
 	return 0;
 }
 
-int last_stage_init(void)
+static int sl28_rgmii_phy_config(struct phy_device *phydev)
 {
-	int i;
+	unsigned short val;
 
-	if (sl28_has_ec_rgmii())
-		setup_ec_rgmii();
+	/* To enable AR8031 ouput a 125MHz clk from CLK_25M */
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x7);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
 
-	if (sl28_has_ec_sgmii())
-		setup_ec_sgmii();
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
+	val &= 0xffe3;
+	val |= 0x18;
+	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val);
 
-	for (i = 0; i < 4; i++) {
-		if (sl28_has_sw_sgmii(i))
-			setup_sw_sgmii(i);
-	}
+	/* introduce tx clock delay */
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
+	val |= 0x0100;
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val);
 
-	if (sl28_has_qsgmii())
-		setup_qsgmii();
+	return 0;
+}
 
-	if (sl28_has_internal_switch())
-		setup_internal_switch();
+int board_phy_config(struct phy_device *phydev)
+{
+	if (!phydev)
+		return 0;
+
+	if (sl28_has_ec_rgmii() && phydev->addr == 4)
+		sl28_rgmii_phy_config(phydev);
+
+	if (phydev->drv && phydev->drv->config)
+		return phydev->drv->config(phydev);
 
 	return 0;
 }
@@ -739,18 +648,20 @@ int board_fix_fdt(void *rw_fdt_blob)
 	}
 
 	if (!sl28_has_ec_sgmii()) {
-		debug("%s: disabling eth-p0\n", __func__);
-		fdt_status_disabled_by_alias(rw_fdt_blob, "eth-p0");
+		debug("%s: disabling fixup0\n", __func__);
+		fdt_status_disabled_by_alias(rw_fdt_blob, "fixup0");
 	}
 
 	if (!sl28_has_ec_rgmii()) {
-		debug("%s: disabling eth-p1\n", __func__);
-		fdt_status_disabled_by_alias(rw_fdt_blob, "eth-p1");
+		debug("%s: disabling fixup1\n", __func__);
+		fdt_status_disabled_by_alias(rw_fdt_blob, "fixup1");
 	}
 
 	if (sl28_has_internal_switch()) {
-		debug("%s: enabling eth-p2\n", __func__);
-		fdt_status_okay_by_alias(rw_fdt_blob, "eth-p2");
+		debug("%s: enabling fixup2\n", __func__);
+		fdt_status_okay_by_alias(rw_fdt_blob, "fixup2");
+		debug("%s: enabling fixup3\n", __func__);
+		fdt_status_okay_by_alias(rw_fdt_blob, "fixup3");
 	}
 
 	return 0;
