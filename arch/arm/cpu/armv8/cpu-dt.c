@@ -8,7 +8,6 @@
 #include <asm/system.h>
 #include <asm/armv8/sec_firmware.h>
 
-#ifdef CONFIG_ARMV8_SEC_FIRMWARE_SUPPORT
 int psci_update_dt(void *fdt)
 {
 	/*
@@ -17,8 +16,10 @@ int psci_update_dt(void *fdt)
 	 * number to support detecting PSCI dynamically and then switching
 	 * the SMP boot method between PSCI and spin-table.
 	 */
+#ifdef CONFIG_ARMV8_SEC_FIRMWARE_SUPPORT
 	if (sec_firmware_support_psci_version() == PSCI_INVALID_VER)
 		return 0;
+#endif
 	fdt_psci(fdt);
 
 #if defined(CONFIG_ARMV8_PSCI) && !defined(CONFIG_ARMV8_SECURE_BASE)
@@ -29,4 +30,3 @@ int psci_update_dt(void *fdt)
 
 	return 0;
 }
-#endif

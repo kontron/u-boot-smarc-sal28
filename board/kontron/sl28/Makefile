@@ -6,7 +6,7 @@
 
 
 ifndef CONFIG_SPL_BUILD
-obj-y += sl28.o cmds.o
+obj-y += sl28.o cmds.o psci.o
 endif
 
 obj-y += common.o ddr.o
