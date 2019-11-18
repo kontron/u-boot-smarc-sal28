@@ -16,17 +16,12 @@
 	compatible = "kontron,sl28", "fsl,ls1028a";
 
 	aliases {
-		serial0 = &lpuart1;
-		serial1 = &serial0;
-		serial2 = &serial1;
+		serial0 = &serial0;
+		serial1 = &serial1;
 		spi0 = &fspi;
 		spi1 = &dspi2;
 		mmc0 = &esdhc0;
 		mmc1 = &esdhc1;
-		eth-p0 = &eth_p0;
-		eth-p1 = &eth_p1;
-		eth-p2 = &eth_p2;
-		ethernet8 = &netc_mdio;
 		i2c0 = &i2c0;
 		i2c1 = &i2c3;
 		i2c2 = &i2c4;
@@ -34,6 +29,10 @@
 		watchdog0 = &cluster1_core0_watchdog;
 		watchdog1 = &cluster1_core1_watchdog;
 		watchdog2 = &watchdog0;
+		fixup0 = &enetc0;
+		fixup1 = &enetc1;
+		fixup2 = &enetc2;
+		fixup3 = &ethsw;
 	};
 
 	chosen {
@@ -52,10 +51,12 @@
 
 &esdhc0 {
 	u-boot,dm-pre-reloc;
+	status = "okay";
 };
 
 &esdhc1 {
 	u-boot,dm-pre-reloc;
+	status = "okay";
 };
 
 &serial0 {
@@ -63,17 +64,11 @@
 	clock-frequency = <200000000>;
 };
 
-&lpuart1 {
-	u-boot,dm-pre-reloc;
-	status = "okay";
-};
-
 &fspi {
 	u-boot,dm-pre-reloc;
 	bus-num = <0>;
 	status = "okay";
 	num-cs = <2>;
-	fspi-has-second-chip;
 
 	qflash0: w25q32jw@0 {
 		u-boot,dm-pre-reloc;
@@ -90,52 +85,58 @@
 	status = "okay";
 };
 
-&enetc_pcie {
-	eth_p0: ethernet@0 {
-		compatible = "fsl,ls-enetc";
-		reg = <0x00000000 0x0 0x0 0x0 0x0>;
+&enetc0 {
+	status = "okay";
+	phy-mode = "sgmii";
+	phy-handle = <&enetc_phy1>;
+};
+
+&enetc1 {
+	status = "okay";
+	phy-mode = "rgmii";
+	phy-handle = <&enetc_phy0>;
+};
+
+&enetc2 {
+	status = "disabled";
+};
+
+&enetc6 {
+	status = "disabled";
+};
+
+&ethsw {
+	status = "disabled";
+	port@0 {
+		status = "okay";
 		phy-mode = "sgmii";
-		phy-handle = <&enetc_phy1>;
-		status = "okay";
+	    phy-handle = <&enetc_phy1>;
 	};
-
-	eth_p1: ethernet@1 {
-		compatible = "fsl,ls-enetc";
-		reg = <0x00000100 0x0 0x0 0x0 0x0>;
-		phy-mode = "rgmii";
-		phy-handle = <&enetc_phy0>;
+	port@1 {
 		status = "okay";
+		phy-mode = "sgmii";
+	    phy-handle = <&enetc_phy0>;
 	};
-
-	eth_p2: ethernet@2 {
-		compatible = "fsl,ls-enetc";
-		reg = <0x00000200 0x0 0x0 0x0 0x0>;
+	port@2 {
 		status = "disabled";
 	};
-
-	ethernet@3 {
-		compatible = "fsl,ls-enetc";
-		reg = <0x00000600 0x0 0x0 0x0 0x0>;
+	port@3 {
 		status = "disabled";
-	};
-
-	netc_mdio: netc_mdio {
-		compatible = "fsl,netc-mdio";
-		reg = <0x00000300 0x0 0x0 0x0 0x0>;
-
-		#address-cells=<0>;
-		#size-cells=<1>;
-		enetc_phy0: phy@4 {
-			reg = <4>;
-		};
-		enetc_phy1: phy@5 {
-			reg = <5>;
-		};
 	};
 };
 
+&mdio0 {
+	status = "okay";
+	enetc_phy0: phy@4 {
+		reg = <4>;
+	};
+	enetc_phy1: phy@5 {
+		reg = <5>;
+	};
+};
 
 &i2c0 {
+	status = "okay";
 	rtc: rtc@32 {
 		compatible = "microcrystal,rv8803";
 		reg = <0x32>;
@@ -145,6 +146,14 @@
 		compatible = "kontron,sl28cpld-wdt";
 		reg = <0x4a>;
 	};
+};
+
+&i2c3 {
+	status = "okay";
+};
+
+&i2c4 {
+	status = "okay";
 };
 
 &sata {
