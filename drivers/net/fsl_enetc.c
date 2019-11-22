@@ -208,6 +208,8 @@ static void enetc_config_phy(struct udevice *dev)
 	int supported;
 
 	priv->phy = dm_eth_phy_connect(dev);
+	if (!priv->phy)
+		return;
 
 	supported = GENMASK(6, 0); /* speeds up to 1G & AN */
 	priv->phy->advertising = priv->phy->supported & supported;
@@ -428,7 +430,8 @@ static int enetc_start(struct udevice *dev)
 
 	enetc_start_pcs(dev);
 	enetc_config_phy(dev);
-	phy_startup(priv->phy);
+	if (priv->phy)
+		phy_startup(priv->phy);
 
 	return 0;
 }
