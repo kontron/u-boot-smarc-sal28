@@ -14,6 +14,14 @@ u32 __secure psci_version(void)
 	return ARM_PSCI_VER_0_2;
 }
 
+void __secure psci_system_reset(void)
+{
+	writel(RESET_REQ, RSTCR);
+
+	while (1)
+		wfi();
+}
+
 void __secure psci_system_off(void)
 {
 	int i;
