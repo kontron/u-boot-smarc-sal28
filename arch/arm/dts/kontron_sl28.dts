@@ -119,9 +119,11 @@
 	};
 	port@2 {
 		status = "disabled";
+		phy-mode = "sgmii";
 	};
 	port@3 {
 		status = "disabled";
+		phy-mode = "sgmii";
 	};
 };
 
