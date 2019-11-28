@@ -140,6 +140,9 @@ static bool sl28_has_internal_switch(void)
 		if (sl28_has_sw_sgmii(i))
 			return true;
 
+	if (sl28_has_qsgmii())
+		return true;
+
 	return false;
 }
 
@@ -634,8 +637,9 @@ void *video_hw_init(void)
 
 int board_fix_fdt(void *rw_fdt_blob)
 {
-	int config_node;
 	enum boot_source src = sl28_boot_source();
+	int config_node;
+	int offset;
 
 	debug("%s\n", __func__);
 
@@ -648,20 +652,52 @@ int board_fix_fdt(void *rw_fdt_blob)
 	}
 
 	if (!sl28_has_ec_sgmii()) {
-		debug("%s: disabling fixup0\n", __func__);
-		fdt_status_disabled_by_alias(rw_fdt_blob, "fixup0");
+		debug("%s: disabling enetc0\n", __func__);
+		offset = fdt_path_offset(rw_fdt_blob,
+					 "/pcie@1f0000000/pci@0,0");
+		if (offset >= 0)
+			fdt_status_disabled(rw_fdt_blob, offset);
 	}
 
 	if (!sl28_has_ec_rgmii()) {
-		debug("%s: disabling fixup1\n", __func__);
-		fdt_status_disabled_by_alias(rw_fdt_blob, "fixup1");
+		debug("%s: disabling enetc1\n", __func__);
+		offset = fdt_path_offset(rw_fdt_blob,
+					 "/pcie@1f0000000/pci@0,1");
+		if (offset >= 0)
+			fdt_status_disabled(rw_fdt_blob, offset);
 	}
 
 	if (sl28_has_internal_switch()) {
-		debug("%s: enabling fixup2\n", __func__);
-		fdt_status_okay_by_alias(rw_fdt_blob, "fixup2");
-		debug("%s: enabling fixup3\n", __func__);
-		fdt_status_okay_by_alias(rw_fdt_blob, "fixup3");
+		debug("%s: enabling enetc2\n", __func__);
+		offset = fdt_path_offset(rw_fdt_blob,
+					 "/pcie@1f0000000/pci@0,2");
+		if (offset >= 0)
+			fdt_status_okay(rw_fdt_blob, offset);
+		debug("%s: enabling ethsw\n", __func__);
+		offset = fdt_path_offset(rw_fdt_blob,
+					 "/pcie@1f0000000/pci@0,5");
+		if (offset >= 0)
+			fdt_status_okay(rw_fdt_blob, offset);
+	}
+
+	if (sl28_has_qsgmii()) {
+		debug("%s: changing port ethsw ports to QSGMII\n", __func__);
+		offset = fdt_path_offset(rw_fdt_blob,
+					 "/pcie@1f0000000/pci@0,5/port@0");
+		if (offset >= 0)
+			fdt_delprop(rw_fdt_blob, offset, "phy-handle");
+		offset = fdt_path_offset(rw_fdt_blob,
+					 "/pcie@1f0000000/pci@0,5/port@1");
+		if (offset >= 0)
+			fdt_delprop(rw_fdt_blob, offset, "phy-handle");
+		offset = fdt_path_offset(rw_fdt_blob,
+					 "/pcie@1f0000000/pci@0,5/port@2");
+		if (offset >= 0)
+			fdt_status_okay(rw_fdt_blob, offset);
+		offset = fdt_path_offset(rw_fdt_blob,
+					 "/pcie@1f0000000/pci@0,5/port@3");
+		if (offset >= 0)
+			fdt_status_okay(rw_fdt_blob, offset);
 	}
 
 	return 0;
