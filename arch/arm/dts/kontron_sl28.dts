@@ -161,3 +161,11 @@
 &sata {
 	status = "okay";
 };
+
+&usb1 {
+	status = "okay";
+};
+
+&usb2 {
+	status = "okay";
+};
