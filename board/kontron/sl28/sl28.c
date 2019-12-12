@@ -172,6 +172,9 @@ static int sl28_get_boot_selection(void)
 		return -1;
 
 	sel = dm_i2c_reg_read(dev, REG_BRD_CTRL);
+	if (sel < 0)
+		return sel;
+
 	sel &= BRD_CTRL_BOOT_SEL_MASK;
 	sel >>= BRD_CTRL_BOOT_SEL_SHIFT;
 
@@ -289,6 +292,10 @@ static void sl28_set_prompt(void)
 static void sl28_evaluate_bootsel_pins(void)
 {
 	int boot_sel = sl28_get_boot_selection();
+
+	/* May fail if CPLD is not available */
+	if (boot_sel < 0)
+		return;
 
 	switch (boot_sel) {
 	case BOOT_SEL_SD_CARD:
