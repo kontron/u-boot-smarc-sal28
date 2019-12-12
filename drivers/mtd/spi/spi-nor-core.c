@@ -2428,6 +2428,7 @@ static int spi_nor_init(struct spi_nor *nor)
 {
 	int err;
 
+#if 0
 	/*
 	 * Atmel, SST, Intel/Numonyx, and others serial NOR tend to power up
 	 * with the software protection bits set
@@ -2440,6 +2441,7 @@ static int spi_nor_init(struct spi_nor *nor)
 		write_sr(nor, 0);
 		spi_nor_wait_till_ready(nor);
 	}
+#endif
 
 	if (nor->quad_enable) {
 		err = nor->quad_enable(nor);
