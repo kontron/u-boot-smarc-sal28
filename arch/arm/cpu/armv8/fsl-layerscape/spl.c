@@ -87,6 +87,13 @@ void board_init_f(ulong dummy)
 	init_func_vid();
 #endif
 	dram_init();
+
+	/*
+	 * Mark BSS and HEAP area of OCRAM non-secure
+	 * to support DMA mode in SD.
+	 */
+	out_le32(TZPCR0SIZE_BASE, 0);
+
 #ifdef CONFIG_SPL_FSL_LS_PPA
 #ifndef CONFIG_SYS_MEM_RESERVE_SECURE
 #error Need secure RAM for PPA
