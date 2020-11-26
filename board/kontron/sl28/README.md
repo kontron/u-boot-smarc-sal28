@@ -41,14 +41,14 @@ As a last resort boot mechanism, the SMARC-sAL28 supports loading the RCW
 from SD card. To use this, assert the `MODULE_TEST#` line. Please keep in
 mind, that this also enables other (undocumented) test features of the
 module. As a customer, you shouldn't use this boot method, nor should you
-ever has to use it. But for the sake of completeness, it is described here.
-After the RCW is loaded from SD card at offset `1000h` it loads the
+ever have to use it. But for the sake of completeness, it is described
+here. After the RCW is loaded from SD card at offset `1000h` it loads the
 bootloader payload from SD card at offset `10_0000h`.
 
 The bootloader payload is a u-boot secondary program loader (SPL) with a
 proper u-boot. The RCW actually only copies the SPL to internal SRAM and
-jumps to its entry point. The SPL initialize the SDRAM, figues out where it
-was bootet from and copies the proper u-boot from the SPI flash (either
+jumps to its entry point. The SPL initializes the SDRAM, figures out where
+it was booted from and copies the proper u-boot from the SPI flash (either
 from the failsafe or from the normal offset) or from SD card to SDRAM and
 jumps to its entry point.
 
@@ -120,8 +120,8 @@ necessary:
    the command, which selectes the normal mode,
 3. kick the watchdog in linux from your application.
 
-In normal mode, the board will still be resetted, but won't start in
-failsafe mode.
+In normal mode, the board will still be reset, but won't start in failsafe
+mode.
 
 ## Failsafe Mode
 
