@@ -1080,6 +1080,9 @@ static void config_core_prefetch(void)
 	unsigned int mask;
 	struct pt_regs regs;
 
+	if (IS_ENABLED(CONFIG_ARMV8_PSCI))
+		return;
+
 #ifdef CONFIG_HWCONFIG
 	if (env_get_f("hwconfig", buffer, sizeof(buffer)) > 0)
 		buf = buffer;
