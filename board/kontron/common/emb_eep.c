@@ -22,7 +22,6 @@
 
 #include <common.h>
 #include <i2c.h>
-#include <environment.h>
 #include "emb_eep.h"
 
 #ifdef CONFIG_EMB_EEP_I2C_EEPROM
@@ -52,7 +51,7 @@ static void increment_macstring(char *macstr, int inc)
         int i, macint;
         unsigned char mac[6];
 
-        eth_parse_enetaddr(macstr, mac);
+        string_to_enetaddr(macstr, mac);
         if (inc) {
                 /* add with carry */
                 for (i=5 ; i>=0 ; i--) {
@@ -522,7 +521,7 @@ void emb_eep_init_r(int eeprom_num, int macs_expected)
 		sprintf(ethname, num ? "eth%daddr" : "ethaddr", num);
 
 		e_ethaddr = env_get(ethname);
-		eth_parse_enetaddr(e_ethaddr, mac);
+		string_to_enetaddr(e_ethaddr, mac);
 		if (!is_valid_ethaddr(mac))
 			e_ethaddr = NULL;
 
@@ -531,7 +530,7 @@ void emb_eep_init_r(int eeprom_num, int macs_expected)
 			/* no more MAC addresses in EEPROM, exit from loop */
 			break;
 
-		eth_parse_enetaddr(v_ethaddr, mac);
+		string_to_enetaddr(v_ethaddr, mac);
 		if (!is_valid_ethaddr(mac)) {
 			v_ethaddr = NULL;
 		}
