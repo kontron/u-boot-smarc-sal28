@@ -161,16 +161,10 @@
 #define CONFIG_SPL_MAX_SIZE            0x20000
 #define CONFIG_SPL_STACK               (CONFIG_SYS_FSL_OCRAM_BASE + 0x9ff0)
 #define CONFIG_SPL_TARGET              "u-boot-with-spl.bin"
-#define CONFIG_SPL_TEXT_BASE           0x18010000
 
 #define CONFIG_SYS_SPL_MALLOC_SIZE     0x00100000
 #define CONFIG_SYS_SPL_MALLOC_START    0x80200000
 #define CONFIG_SYS_MONITOR_LEN         (1024 * 1024)
-
-#define CONFIG_SPL_SPI_LOAD
-#define CONFIG_SYS_SPI_U_BOOT_OFFS	0x26000
-#define CONFIG_SYS_SPI_U_BOOT_SIZE	(0x100000 - (CONFIG_SYS_SPI_U_BOOT_OFFS))
-
 #endif
 
 #define CONFIG_SYS_CLK_FREQ             100000000 /* 100 MHz base clock */
@@ -202,21 +196,6 @@
 #define NXP_FSPI_FLASH_SIZE             SZ_4M
 #define NXP_FSPI_FLASH_NUM              1
 #endif
-
-/******************************************************************************
- * Environment organization
- */
-
-#define CONFIG_SYS_FLASH_BASE           0x20000000
-#define CONFIG_ENV_OFFSET               0x3e0000
-#define CONFIG_ENV_SIZE                 0x2000
-#define CONFIG_ENV_SECT_SIZE            0x10000
-#define CONFIG_ENV_ADDR                 (CONFIG_SYS_FLASH_BASE + \
-                                         CONFIG_ENV_OFFSET)
-
-#define CONFIG_SYS_REDUNDAND_ENVIRONMENT
-#define CONFIG_ENV_OFFSET_REDUND        0x3f0000
-#define CONFIG_ENV_SIZE_REDUND          (CONFIG_ENV_SIZE)
 
 #ifdef CONFIG_SPL_BUILD
 #define CONFIG_SYS_MONITOR_BASE CONFIG_SPL_TEXT_BASE
