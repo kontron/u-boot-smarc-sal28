@@ -58,13 +58,13 @@
 /* Allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
 
-#define CONFIG_LOADADDR 0x81000000
+#define CONFIG_LOADADDR 0x82000000
 #define ENV_MEM_LAYOUT_SETTINGS \
-	"scriptaddr=0x90000000\0" \
-	"pxefile_addr_r=0x90100000\0" \
+	"scriptaddr=0x80000000\0" \
+	"pxefile_addr_r=0x80100000\0" \
 	"kernel_addr_r=" __stringify(CONFIG_LOADADDR) "\0" \
-	"fdt_addr_r=0x83000000\0" \
-	"ramdisk_addr_r=0x83100000\0"
+	"fdt_addr_r=0x88000000\0" \
+	"ramdisk_addr_r=0x88080000\0"
 
 #ifdef CONFIG_KONTRON_TEST_EXTENSIONS
 #define BOOTENV_DEV_DAILY(devtypeu, devtypel, instance) \
