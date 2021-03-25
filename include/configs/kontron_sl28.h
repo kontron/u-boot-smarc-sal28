@@ -130,7 +130,7 @@
 	"hdpload=hdp load ${hdp_fw_addr} 0x2000\0" \
 	"env_addr=0x203e0004\0" \
 	"envload=env import -d -b ${env_addr}\0" \
-	"install_rcw=source 20200000\0" \
+	"install_rcw=sf probe 0 && sf read ${loadaddr} 200000 10000 && source ${loadaddr}\0" \
 	ENV_KONTRON_LVDS_EXTENSIONS \
 	ENV_KONTRON_TEST_EXTENSIONS \
 	ENV_MEM_LAYOUT_SETTINGS \
