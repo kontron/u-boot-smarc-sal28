@@ -76,6 +76,16 @@
 		status = "disabled";
 	};
 
+	lpuart1: serial@2270000 {
+		compatible = "fsl,ls1021a-lpuart";
+		reg = <0x0 0x2270000 0x0 0x1000>;
+		interrupts = <0 233 0x4>;
+		clocks = <&sysclk>;
+		clock-names = "ipg";
+		little-endian;
+		status = "disabled";
+	};
+
 	pcie@3400000 {
 	       compatible = "fsl,ls-pcie", "fsl,ls1028-pcie", "snps,dw-pcie";
 	       reg = <0x00 0x03400000 0x0 0x80000

@@ -18,6 +18,7 @@
 	aliases {
 		serial0 = &serial0;
 		serial1 = &serial1;
+		serial2 = &lpuart1;
 		spi0 = &fspi;
 		spi1 = &dspi2;
 		mmc0 = &esdhc0;
@@ -125,6 +126,11 @@
 		status = "disabled";
 		phy-mode = "sgmii";
 	};
+};
+
+&lpuart1 {
+	u-boot,dm-pre-reloc;
+	status = "okay";
 };
 
 &mdio0 {
