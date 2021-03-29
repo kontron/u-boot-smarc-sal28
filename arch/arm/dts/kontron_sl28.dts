@@ -127,6 +127,11 @@
 	};
 };
 
+&lpuart1 {
+	u-boot,dm-pre-reloc;
+	status = "okay";
+};
+
 &mdio0 {
 	status = "okay";
 	enetc_phy0: phy@4 {
