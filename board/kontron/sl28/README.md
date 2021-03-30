@@ -282,3 +282,25 @@ power-on reset.
 
 [1]: https://github.com/kontron/rcw-smarc-sal28/blob/master/README.md
 [2]: ../../../arch/arm/cpu/armv8/fsl-layerscape/doc/README.soc
+
+## Using SER0 As Console Output Device
+
+If your carrier doesn't support the second serial line (SER1) you can
+change the output device to the first serial line (SER0) by changing the
+"stdout-path" in the /chosen node of u-boot's device tree:
+
+     chosen {
+         stdout-path = &lpuart1;
+     };
+
+After changing this you have to recompile u-boot.
+
+## Flashing A Custom Bootloader
+
+After building the bootloader there is a file called `u-boot-with-spl.bin`.
+This binary has to be flashed to the SPI flash at offset 0x210000. For
+example:
+
+    tftp u-boot-with-spl.bin
+    sf probe 0
+    sf update $fileaddr 0x210000 $filesize
