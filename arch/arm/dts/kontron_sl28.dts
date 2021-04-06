@@ -93,7 +93,7 @@
 
 &enetc1 {
 	status = "okay";
-	phy-mode = "rgmii";
+	phy-mode = "rgmii-id";
 	phy-handle = <&enetc_phy0>;
 };
 
