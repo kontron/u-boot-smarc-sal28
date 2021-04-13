@@ -486,9 +486,15 @@ static int sl28_rgmii_phy_config(struct phy_device *phydev)
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
 
 	val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
-	val &= 0xffe3;
+	val &= 0xfe63;
 	val |= 0x18;
 	phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val);
+
+	/* select RGMII 1.8V voltage and keep PLL enabled */
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x1f);
+	val = phy_read(phydev, MDIO_DEVAD_NONE, 0x1e);
+	val |= 0x000c;
+	phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, val);
 
 	/* introduce tx clock delay */
 	phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x5);
