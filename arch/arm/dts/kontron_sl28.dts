@@ -107,6 +107,9 @@
 
 &ethsw {
 	status = "disabled";
+};
+
+&ethsw_ports {
 	port@0 {
 		status = "okay";
 		phy-mode = "sgmii";
