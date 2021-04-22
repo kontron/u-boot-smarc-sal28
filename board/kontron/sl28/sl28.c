@@ -383,6 +383,10 @@ int fsl_board_late_init(void)
 	env_set_ulong("bootsource", sl28_boot_source());
 	env_set_ulong("bootsel", sl28_get_boot_selection());
 
+	if (sl28_has_internal_switch() && !env_get("ethact")) {
+		env_set("ethact", "swp0");
+	}
+
 	sl28_set_prompt();
 	sl28_fixup_failsafe_environment();
 
