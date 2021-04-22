@@ -120,18 +120,6 @@ static bool sl28_has_sw_sgmii(int n)
 	return true;
 }
 
-static bool sl28_has_qsgmii(void)
-{
-	u32 rcwsr29 = in_le32(DCFG_BASE + DCFG_RCWSR29);
-
-	debug("%s: rcwsr29=%08x\n", __func__, rcwsr29);
-
-	if ((rcwsr29 & 0x00f00000) != 0x00500000)
-		return false;
-
-	return true;
-}
-
 static bool sl28_has_internal_switch(void)
 {
 	int i;
@@ -139,9 +127,6 @@ static bool sl28_has_internal_switch(void)
 	for (i = 0; i < 4; i++)
 		if (sl28_has_sw_sgmii(i))
 			return true;
-
-	if (sl28_has_qsgmii())
-		return true;
 
 	return false;
 }
@@ -568,26 +553,6 @@ int board_fix_fdt(void *rw_fdt_blob)
 		debug("%s: enabling ethsw\n", __func__);
 		offset = fdt_path_offset(rw_fdt_blob,
 					 "/pcie@1f0000000/pci@0,5");
-		if (offset >= 0)
-			fdt_status_okay(rw_fdt_blob, offset);
-	}
-
-	if (sl28_has_qsgmii()) {
-		debug("%s: changing port ethsw ports to QSGMII\n", __func__);
-		offset = fdt_path_offset(rw_fdt_blob,
-					 "/pcie@1f0000000/pci@0,5/port@0");
-		if (offset >= 0)
-			fdt_delprop(rw_fdt_blob, offset, "phy-handle");
-		offset = fdt_path_offset(rw_fdt_blob,
-					 "/pcie@1f0000000/pci@0,5/port@1");
-		if (offset >= 0)
-			fdt_delprop(rw_fdt_blob, offset, "phy-handle");
-		offset = fdt_path_offset(rw_fdt_blob,
-					 "/pcie@1f0000000/pci@0,5/port@2");
-		if (offset >= 0)
-			fdt_status_okay(rw_fdt_blob, offset);
-		offset = fdt_path_offset(rw_fdt_blob,
-					 "/pcie@1f0000000/pci@0,5/port@3");
 		if (offset >= 0)
 			fdt_status_okay(rw_fdt_blob, offset);
 	}
