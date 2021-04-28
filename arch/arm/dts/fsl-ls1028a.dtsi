@@ -14,17 +14,6 @@
 	#address-cells = <2>;
 	#size-cells = <2>;
 
-	aliases {
-		eth0 = &enetc0;
-		eth1 = &enetc1;
-		eth2 = &enetc2;
-		eth3 = &enetc6;
-		eth4 = &felix0;
-		eth5 = &felix1;
-		eth6 = &felix2;
-		eth7 = &felix3;
-	};
-
 	sysclk: sysclk {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
