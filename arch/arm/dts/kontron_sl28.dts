@@ -99,7 +99,7 @@
 };
 
 &enetc2 {
-	status = "disabled";
+	status = "okay";
 };
 
 &enetc6 {
