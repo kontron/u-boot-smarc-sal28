@@ -33,6 +33,7 @@
 		fixup1 = &enetc1;
 		fixup2 = &enetc2;
 		fixup3 = &ethsw;
+		eth2 = &enetc2;
 	};
 
 	chosen {
